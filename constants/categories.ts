@@ -1,1 +1,1 @@
-// TODO: Implement this file
+import { LegalCategory } from "@/types";
