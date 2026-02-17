@@ -60,4 +60,5 @@ export const getStateByAbbreviation = (abbreviation: string): State | undefined 
 
 export const getStateByName = (name: string): State | undefined => {
   return states.find(state => state.name.toLowerCase() === name.toLowerCase());
-};/ TODO: Implement this file
+};
+// TODO(PHASE-?): Implement this module fully

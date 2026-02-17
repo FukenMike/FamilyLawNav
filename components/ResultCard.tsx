@@ -60,7 +60,7 @@ export default function ResultCard({ result, onPress }: ResultCardProps) {
       </Text>
       
       <TouchableOpacity style={styles.sourceLink} onPress={handleOpenLink}>
-        <ExternalLink size={16} color={colors.primary} />
+        <Feather name="external-link" size={16} color={colors.primary} />
         <Text style={styles.sourceLinkText}>View Source</Text>
       </TouchableOpacity>
     </TouchableOpacity>
@@ -130,4 +130,5 @@ const styles = StyleSheet.create({
     marginLeft: 6,
     fontWeight: "500",
   },
-});// TODO: Implement this file
+});
+// TODO(PHASE-?): Implement this module fully

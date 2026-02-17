@@ -85,11 +85,7 @@ const styles = StyleSheet.create({
     height: "100%",
     fontSize: 16,
     color: colors.text,
-    ...Platform.select({
-      web: {
-        outlineStyle: "none",
-      },
-    }),
+    // outlineStyle removed for React Native compatibility
   },
   clearButton: {
     padding: 4,
@@ -105,4 +101,5 @@ const styles = StyleSheet.create({
   searchingButton: {
     backgroundColor: colors.mediumGray,
   },
-});/ TODO: Implement this file
+});
+// TODO(PHASE-?): Implement this module fully

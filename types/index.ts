@@ -54,4 +54,5 @@ export type SearchState = {
   setIsSearching: (isSearching: boolean) => void;
   setError: (error: string | null) => void;
   clearResults: () => void;
-};// TODO: Implement this file
+};
+// TODO(PHASE-?): Implement this module fully

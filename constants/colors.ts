@@ -12,4 +12,5 @@ export const colors = {
   lightGray: "#F3F4F6",
   mediumGray: "#9CA3AF",
   darkGray: "#4B5563",
-}; TODO: Implement this file
+};
+// TODO(PHASE-?): Implement this module fully

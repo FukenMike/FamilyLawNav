@@ -1,4 +1,4 @@
-//import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { FontAwesome } from "@expo/vector-icons";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -69,4 +69,5 @@ function RootLayoutNav() {
       </Stack>
     </>
   );
-} TODO: Implement this file
+}
+// TODO(PHASE-?): Implement this module fully
