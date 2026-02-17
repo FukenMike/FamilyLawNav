@@ -28,7 +28,11 @@ const extractJsonFromString = (text: string): string => {
 export const classifyQuery = async (query: string): Promise<ClassifiedQuery> => {
   try {
     // In a real implementation, this would be a call to the OpenAI API
-    const response = await fetch("https://toolkit.rork.com/text/llm/", {
+    const LLM_ENDPOINT = process.env.EXPO_PUBLIC_LLM_ENDPOINT;
+    if (!LLM_ENDPOINT) {
+      throw new Error("Missing EXPO_PUBLIC_LLM_ENDPOINT. Please set it in your environment (see .env.example). This is required to use AI features.");
+    }
+    const response = await fetch(LLM_ENDPOINT, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -95,7 +99,11 @@ export const classifyQuery = async (query: string): Promise<ClassifiedQuery> => 
 
 export const summarizeLegalText = async (text: string, title: string): Promise<string> => {
   try {
-    const response = await fetch("https://toolkit.rork.com/text/llm/", {
+    const LLM_ENDPOINT = process.env.EXPO_PUBLIC_LLM_ENDPOINT;
+    if (!LLM_ENDPOINT) {
+      throw new Error("Missing EXPO_PUBLIC_LLM_ENDPOINT. Please set it in your environment (see .env.example). This is required to use AI features.");
+    }
+    const response = await fetch(LLM_ENDPOINT, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

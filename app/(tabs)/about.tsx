@@ -1,6 +1,6 @@
-/import React from "react";
+import React from "react";
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Linking, Platform } from "react-native";
-import { ExternalLink, Mail, Heart } from "lucide-react-native";
+import { Feather } from "@expo/vector-icons";
 import { colors } from "@/constants/colors";
 
 export default function AboutScreen() {
@@ -75,7 +75,7 @@ export default function AboutScreen() {
           style={styles.contactButton}
           onPress={() => handleOpenLink("mailto:contact@fathersalliance.org")}
         >
-          <Mail size={20} color="#fff" />
+          <Feather name="mail" size={20} color="#fff" />
           <Text style={styles.contactButtonText}>Email Us</Text>
         </TouchableOpacity>
         
@@ -83,13 +83,13 @@ export default function AboutScreen() {
           style={styles.websiteButton}
           onPress={() => handleOpenLink("https://fathersalliance.org")}
         >
-          <ExternalLink size={20} color={colors.primary} />
+          <Feather name="external-link" size={20} color={colors.primary} />
           <Text style={styles.websiteButtonText}>Visit Our Website</Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.footer}>
-        <Heart size={16} color={colors.error} />
+        <Feather name="heart" size={16} color={colors.error} />
         <Text style={styles.footerText}>
           Made with love for families navigating difficult times
         </Text>

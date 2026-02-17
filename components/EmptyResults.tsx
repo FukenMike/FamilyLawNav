@@ -42,7 +42,7 @@
 42
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { Search } from "lucide-react-native";
+import { Feather } from "@expo/vector-icons";
 import { colors } from "@/constants/colors";
 
 interface EmptyResultsProps {
@@ -52,7 +52,7 @@ interface EmptyResultsProps {
 export default function EmptyResults({ message }: EmptyResultsProps) {
   return (
     <View style={styles.container}>
-      <Search size={48} color={colors.mediumGray} />
+      <Feather name="search" size={48} color={colors.mediumGray} />
       <Text style={styles.title}>No Results Found</Text>
       <Text style={styles.message}>
         {message || "Try searching for legal information using specific terms like 'Alabama emergency custody' or 'Texas child support calculation'."}

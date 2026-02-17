@@ -1,4 +1,4 @@
-/import { LegalResult, ClassifiedQuery } from "@/types";
+import { LegalResult, ClassifiedQuery } from "@/types";
 import { summarizeLegalText } from "./aiService";
 
 // Mock data for demonstration purposes

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Linking, Platform } from "react-native";
 import { useLocalSearchParams, Stack, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { ExternalLink, Bookmark, BookmarkCheck, ArrowLeft, Share2 } from "lucide-react-native";
+import { Feather } from "@expo/vector-icons";
 import { colors } from "@/constants/colors";
 import { LegalResult } from "@/types";
 import { getCategoryById } from "@/constants/categories";
@@ -141,19 +141,19 @@ export default function ResultDetailsScreen() {
           title: "Legal Information",
           headerLeft: () => (
             <TouchableOpacity onPress={() => router.back()} style={styles.headerButton}>
-              <ArrowLeft size={24} color={colors.text} />
+              <Feather name="arrow-left" size={24} color={colors.text} />
             </TouchableOpacity>
           ),
           headerRight: () => (
             <View style={styles.headerRightContainer}>
               <TouchableOpacity onPress={handleShare} style={styles.headerButton}>
-                <Share2 size={24} color={colors.text} />
+                <Feather name="share-2" size={24} color={colors.text} />
               </TouchableOpacity>
               <TouchableOpacity onPress={handleSaveResult} style={styles.headerButton}>
                 {isSaved ? (
-                  <BookmarkCheck size={24} color={colors.primary} />
+                  <Feather name="check" size={24} color={colors.primary} />
                 ) : (
-                  <Bookmark size={24} color={colors.text} />
+                  <Feather name="bookmark" size={24} color={colors.text} />
                 )}
               </TouchableOpacity>
             </View>
@@ -194,7 +194,7 @@ export default function ResultDetailsScreen() {
             </View>
             
             <TouchableOpacity style={styles.sourceButton} onPress={handleOpenLink}>
-              <ExternalLink size={20} color="#fff" />
+              <Feather name="external-link" size={20} color="#fff" />
               <Text style={styles.sourceButtonText}>View Original Source</Text>
             </TouchableOpacity>
             

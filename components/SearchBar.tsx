@@ -1,6 +1,6 @@
-/import React, { useState } from "react";
+import React, { useState } from "react";
 import { StyleSheet, TextInput, View, TouchableOpacity, ActivityIndicator, Platform } from "react-native";
-import { Search, X } from "lucide-react-native";
+import { Feather } from "@expo/vector-icons";
 import { colors } from "@/constants/colors";
 
 interface SearchBarProps {
@@ -25,7 +25,7 @@ export default function SearchBar({ onSearch, isSearching, initialQuery = "" }: 
   return (
     <View style={styles.container}>
       <View style={styles.searchContainer}>
-        <Search size={20} color={colors.mediumGray} style={styles.searchIcon} />
+        <Feather name="search" size={20} color={colors.mediumGray} style={styles.searchIcon} />
         <TextInput
           style={styles.input}
           placeholder="Search legal information (e.g., Alabama emergency custody)"
@@ -40,7 +40,7 @@ export default function SearchBar({ onSearch, isSearching, initialQuery = "" }: 
         />
         {query.length > 0 && (
           <TouchableOpacity onPress={clearSearch} style={styles.clearButton}>
-            <X size={18} color={colors.mediumGray} />
+            <Feather name="x" size={18} color={colors.mediumGray} />
           </TouchableOpacity>
         )}
       </View>
@@ -52,7 +52,7 @@ export default function SearchBar({ onSearch, isSearching, initialQuery = "" }: 
         {isSearching ? (
           <ActivityIndicator size="small" color="#fff" />
         ) : (
-          <Search size={20} color="#fff" />
+          <Feather name="search" size={20} color="#fff" />
         )}
       </TouchableOpacity>
     </View>

@@ -1,4 +1,4 @@
-/import { State } from "@/types";
+import { State } from "@/types";
 
 export const states: State[] = [
   { id: "AL", name: "Alabama", abbreviation: "AL" },

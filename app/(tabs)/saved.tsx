@@ -1,8 +1,8 @@
-/import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { StyleSheet, View, FlatList, Text, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Bookmark, Trash2 } from "lucide-react-native";
+import { Feather } from "@expo/vector-icons";
 import { LegalResult } from "@/types";
 import ResultCard from "@/components/ResultCard";
 import EmptyResults from "@/components/EmptyResults";
@@ -73,7 +73,7 @@ export default function SavedResultsScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>Saved Legal Information</Text>
         <TouchableOpacity style={styles.clearButton} onPress={handleClearAll}>
-          <Trash2 size={16} color={colors.error} />
+          <Feather name="trash-2" size={16} color={colors.error} />
           <Text style={styles.clearButtonText}>Clear All</Text>
         </TouchableOpacity>
       </View>

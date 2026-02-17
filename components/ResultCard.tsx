@@ -1,6 +1,6 @@
 import React from "react";
 import { StyleSheet, Text, View, TouchableOpacity, Linking, Platform } from "react-native";
-import { ExternalLink, ChevronRight } from "lucide-react-native";
+import { Feather } from "@expo/vector-icons";
 import { colors } from "@/constants/colors";
 import { LegalResult } from "@/types";
 import { getCategoryById } from "@/constants/categories";
@@ -34,7 +34,7 @@ export default function ResultCard({ result, onPress }: ResultCardProps) {
         <Text style={styles.title} numberOfLines={2}>
           {result.title}
         </Text>
-        <ChevronRight size={20} color={colors.mediumGray} />
+        <Feather name="chevron-right" size={20} color={colors.mediumGray} />
       </View>
       
       <View style={styles.tagsContainer}>

@@ -1,6 +1,6 @@
 import React from "react";
 import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
-import { AlertCircle, RefreshCw } from "lucide-react-native";
+import { Feather } from "@expo/vector-icons";
 import { colors } from "@/constants/colors";
 
 interface ErrorMessageProps {
@@ -11,12 +11,12 @@ interface ErrorMessageProps {
 export default function ErrorMessage({ message, onRetry }: ErrorMessageProps) {
   return (
     <View style={styles.container}>
-      <AlertCircle size={48} color={colors.error} />
+      <Feather name="alert-circle" size={48} color={colors.error} />
       <Text style={styles.title}>Something Went Wrong</Text>
       <Text style={styles.message}>{message}</Text>
       {onRetry && (
         <TouchableOpacity style={styles.retryButton} onPress={onRetry}>
-          <RefreshCw size={16} color="#fff" />
+          <Feather name="refresh-cw" size={16} color="#fff" />
           <Text style={styles.retryText}>Try Again</Text>
         </TouchableOpacity>
       )}
