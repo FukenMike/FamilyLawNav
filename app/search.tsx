@@ -1,6 +1,6 @@
-import { Redirect } from "expo-router";
+import { Redirect } from 'expo-router';
 
-export default function SearchRoute() {
-  // /search is a legacy route; send users to the app root.
-  return <Redirect href="/" />;
+// Neutralize duplicate root-level route — canonical Search lives at app/(tabs)/search.tsx
+export default function LegacySearchRedirect() {
+  return <Redirect href="/search" />;
 }
