@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, ScrollView
 import { runNavigator } from "@/services/navigatorService";
 import { gaPack } from "@/data/statePacks/ga";
 import type { Domain, IntakeQuestion, IntakeAnswer, NavigatorOutput } from "@/core/navigator/types";
+import { encodeAuthorityId } from "@/services/authorityIdHelpers";
+import { useRouter } from "expo-router";
 
 const STATES = ["GA"];
 
@@ -14,6 +16,7 @@ export default function NavigatorScreen() {
   const [output, setOutput] = useState<NavigatorOutput | null>(null);
   const [loading, setLoading] = useState(false);
   const [gap, setGap] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     // For this seed, intake questions are not in the pack, so synthesize a few for demo
@@ -108,7 +111,14 @@ export default function NavigatorScreen() {
               {/* Authorities */}
               <Text style={styles.subLabel}>Authorities:</Text>
               {(output.authoritiesByIssue[issue.issueId] || []).map((c, i) => (
-                <Text key={i} style={styles.value}>{c}</Text>
+                <TouchableOpacity
+                  key={i}
+                  style={styles.authorityRow}
+                  onPress={() => router.push(`/resource/${encodeAuthorityId(c)}`)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.authorityText}>{c}</Text>
+                </TouchableOpacity>
               ))}
               {/* Legal Tests */}
               <Text style={styles.subLabel}>Legal Tests:</Text>
@@ -246,4 +256,17 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 2,
   },
+    authorityRow: {
+      paddingVertical: 4,
+      paddingHorizontal: 8,
+      borderRadius: 4,
+      backgroundColor: '#e3e9f6',
+      marginBottom: 4,
+      alignSelf: 'flex-start',
+    },
+    authorityText: {
+      color: '#1976d2',
+      fontWeight: 'bold',
+      fontSize: 15,
+    },
 });

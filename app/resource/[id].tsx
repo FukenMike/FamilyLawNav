@@ -1,134 +1,118 @@
 import { useEffect, useState } from 'react'
-import {
-  View,
-  Text,
-  StyleSheet,
-  ActivityIndicator,
-  ScrollView,
-} from 'react-native'
+import { View, Text, StyleSheet, ActivityIndicator, ScrollView } from 'react-native'
 import { useLocalSearchParams } from 'expo-router'
+import { decodeAuthorityId } from '@/services/authorityIdHelpers'
+import { authorityPackProvider } from '@/config/runtime'
 
-const API_BASE =
-  process.env.EXPO_PUBLIC_FAMILYLAW_API_BASE_URL?.trim() ||
-  'http://127.0.0.1:8787'
-
-export default function ResourceDetailsScreen() {
+export default function AuthorityDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
-
-  interface Resource {
-    id: string;
-    title: string;
-    summary: string;
-    url?: string | null;
-    category?: string | null;
-    last_verified_at?: string | null;
-  }
-  interface Coverage {
-    coverage_type: string;
-    state_code?: string | null;
-    zip_prefix?: string | null;
-  }
-  interface ResourceDetailsResponse {
-    resource: Resource;
-    coverage: Coverage[];
-  }
-
-  const [data, setData] = useState<ResourceDetailsResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [authority, setAuthority] = useState<any | null>(null)
+  const [referencedBy, setReferencedBy] = useState<string[]>([])
+  const [decodedCitation, setDecodedCitation] = useState<string>("")
 
   useEffect(() => {
-    if (!id) return
-    setLoading(true)
-    setError(null)
-    fetch(`${API_BASE}/resource/${id}`)
-      .then(async (res) => {
-        if (!res.ok) throw new Error(`Failed (${res.status})`)
-        return res.json()
-      })
-      .then(setData)
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false))
-  }, [id])
+    if (!id) return;
+    setLoading(true);
+    setError(null);
+    const citation = decodeAuthorityId(id);
+    setDecodedCitation(citation);
+    authorityPackProvider.getStatePack("GA").then(pack => {
+      if (!pack || !pack.authorities) {
+        setAuthority(null);
+        setReferencedBy([]);
+        setLoading(false);
+        return;
+      }
+      const meta = pack.authorities[citation] || null;
+      // Find which issues reference this citation
+      const referenced: string[] = [];
+      for (const [issueId, citations] of Object.entries(pack.authoritiesByIssue || {})) {
+        if (citations.includes(citation)) referenced.push(issueId);
+      }
+      setAuthority(meta);
+      setReferencedBy(referenced);
+      setLoading(false);
+    }).catch(e => {
+      setError(e.message);
+      setLoading(false);
+    });
+  }, [id]);
 
-  if (loading)
+  if (loading) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" />
       </View>
-    )
-  if (error)
+    );
+  }
+  if (error) {
     return (
       <View style={styles.center}>
         <Text style={styles.error}>{error}</Text>
       </View>
-    )
-  if (!data) return null
-
-  const { resource, coverage } = data
-
+    );
+  }
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>{resource.title}</Text>
-      <Text style={styles.summary}>{resource.summary}</Text>
-      {resource.category && (
-        <Text style={styles.label}>
-          Category: <Text style={styles.value}>{resource.category}</Text>
-        </Text>
-      )}
-      {resource.last_verified_at && (
-        <Text style={styles.label}>
-          Last Verified:{' '}
-          <Text style={styles.value}>{resource.last_verified_at}</Text>
-        </Text>
-      )}
-      <Text style={styles.section}>Coverage</Text>
-      {coverage.length === 0 ? (
-        <Text style={styles.value}>No coverage data.</Text>
+      {!authority ? (
+        <View>
+          <Text style={styles.title}>Authority not found in this state pack</Text>
+          <Text style={styles.value}>{decodedCitation}</Text>
+        </View>
       ) : (
-        coverage.map((c, i) => (
-          <View key={i} style={styles.coverageRow}>
-            <Text style={styles.value}>{c.coverage_type}</Text>
-            {c.state_code && (
-              <Text style={styles.value}> | State: {c.state_code}</Text>
-            )}
-            {c.zip_prefix && (
-              <Text style={styles.value}> | Zip: {c.zip_prefix}</Text>
-            )}
-          </View>
-        ))
+        <View>
+          <Text style={styles.title}>{authority.title || decodedCitation}</Text>
+          <Text style={styles.value}>{authority.kind}</Text>
+          {authority.rank && <Text style={styles.value}>Rank: {authority.rank}</Text>}
+          {authority.courtScope && <Text style={styles.value}>Court: {authority.courtScope}</Text>}
+          {authority.sources && authority.sources.length > 0 && (
+            <View style={{ marginTop: 10 }}>
+              <Text style={styles.label}>Sources:</Text>
+              {authority.sources.map((url: string, i: number) => (
+                <Text key={i} style={[styles.value, { color: '#1976d2' }]} onPress={() => window.open ? window.open(url, '_blank') : null}>{url}</Text>
+              ))}
+            </View>
+          )}
+          {referencedBy.length > 0 && (
+            <View style={{ marginTop: 16 }}>
+              <Text style={styles.label}>Referenced by issues:</Text>
+              {referencedBy.map((iss, i) => (
+                <Text key={i} style={styles.value}>{iss}</Text>
+              ))}
+            </View>
+          )}
+        </View>
       )}
     </ScrollView>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
+    flexGrow: 1,
+    padding: 24,
     backgroundColor: '#fff',
   },
   center: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: '#fff',
   },
   title: {
     fontSize: 22,
     fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  summary: {
-    fontSize: 16,
-    marginBottom: 12,
-    color: '#333',
+    marginBottom: 8,
   },
   label: {
     fontWeight: 'bold',
-    marginTop: 6,
-    marginBottom: 2,
+    marginTop: 12,
   },
   value: {
+    fontSize: 16,
+    marginBottom: 4,
     fontWeight: 'normal',
     color: '#222',
   },
@@ -142,9 +126,10 @@ const styles = StyleSheet.create({
     color: '#b00020',
     fontWeight: 'bold',
     fontSize: 16,
+    marginTop: 16,
   },
   coverageRow: {
     flexDirection: 'row',
     marginBottom: 4,
-  },
-})
+	},
+});
