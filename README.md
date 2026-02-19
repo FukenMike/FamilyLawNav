@@ -35,6 +35,20 @@ npm run reset-project
 
 This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
 
+
+## Features
+
+- **Navigator Tab**: A triage-first legal navigator is available as a tab, allowing users to answer intake questions and see detected issues, legal authorities, and references.
+- **Authority Details Navigation**: Tapping an authority citation in the Navigator tab navigates to a details screen, showing metadata and referenced issues for that authority.
+- **Strict TypeScript**: The project enforces strict TypeScript settings and minimal-diff policy for maintainability and reliability.
+
+## Architecture
+
+- **Navigator logic**: See `app/(tabs)/navigator.tsx` for the main navigator UI and logic.
+- **Authority details**: See `app/resource/[id].tsx` for the authority details screen, which decodes the citation and loads metadata.
+- **Authority ID helpers**: See `services/authorityIdHelpers.ts` for encoding/decoding authority citations for navigation.
+- **State packs**: Authority and domain data are defined in `data/statePacks/ga.ts`.
+
 ## Learn more
 
 To learn more about developing your project with Expo, look at the following resources:
