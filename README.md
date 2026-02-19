@@ -1,64 +1,173 @@
-# Welcome to your Expo app 👋
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+# Family Law Navigator
 
-## Get started
+Family Law Navigator is a jurisdiction-aware legal issue navigator focused on family law.
 
-1. Install dependencies
+It helps users understand the controlling law in their case — statutes, court rules, case law, legal standards, required findings, burdens of proof, and procedural requirements — while also guiding them toward appropriate support resources when needed.
 
-   ```bash
-   npm install
-   ```
+This project is designed to reduce procedural blind spots in family court and increase clarity around what the law actually requires.
 
-2. Start the app
+## Scope: Family Law
 
-   ```bash
-   npx expo start
-   ```
+Current and planned domains include:
 
-In the output, you'll find options to open the app in a
+- Custody (initial determinations, modification, emergency)
+- Child support
+- Dependency
+- Termination of parental rights
+- Domestic violence protective orders
+- Jurisdiction and venue
+- Service and notice requirements
+- Required judicial findings
+- Burdens of proof and evidentiary standards
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+The system focuses specifically on family law processes and court structure.
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## Core Flow
 
-## Get a fresh project
+Users select:
 
-When you're ready, run:
+- State
+- Family law domain
+- Structured intake questions
 
-```bash
-npm run reset-project
-```
+The system provides:
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+- Detected legal issues
+- Controlling statutes
+- Applicable court rules
+- Key case anchors
+- Legal standards and burdens
+- Required findings
+- Procedural risk factors
+- Clear pathways toward legal aid or assistance resources where relevant
 
+**Flow:**
 
-## Features
-
-- **Navigator Tab**: A triage-first legal navigator is available as a tab, allowing users to answer intake questions and see detected issues, legal authorities, and references.
-- **Authority Details Navigation**: Tapping an authority citation in the Navigator tab navigates to a details screen, showing metadata and referenced issues for that authority.
-- **Strict TypeScript**: The project enforces strict TypeScript settings and minimal-diff policy for maintainability and reliability.
+state → family law domain → intake → issue detection → authority → authority details → support pathways
 
 ## Architecture
 
-- **Navigator logic**: See `app/(tabs)/navigator.tsx` for the main navigator UI and logic.
-- **Authority details**: See `app/resource/[id].tsx` for the authority details screen, which decodes the citation and loads metadata.
-- **Authority ID helpers**: See `services/authorityIdHelpers.ts` for encoding/decoding authority citations for navigation.
-- **State packs**: Authority and domain data are defined in `data/statePacks/ga.ts`.
+### Unified National Schema
 
-## Learn more
+All states share a single structured schema:
 
-To learn more about developing your project with Expo, look at the following resources:
+- Issues
+- Legal tests and elements
+- Authority records (citation-centric identity)
+- Issue → authority mappings
+- Verification metadata
+- Gap tracking
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Each state provides a data pack conforming to this schema.
 
-## Join the community
+### State Packs
 
-Join our community of developers creating universal apps.
+Current implementation:
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- Georgia (GA) seeded
+- Additional states scaffolded for expansion
+
+Each state pack includes:
+
+- schemaVersion
+- packVersion
+- authorities keyed by citation
+- issue mappings
+- legal tests
+- procedural risks
+- verification metadata
+
+Future state packs will be loaded dynamically to keep the app lightweight.
+
+### Citation-Centric Authority Model
+
+Authorities are identified by citation rather than URL.
+
+Each authority may include:
+
+- kind (statute, rule, case)
+- title
+- rank (binding, persuasive)
+- court scope
+- source references
+- verification status
+
+Citations are canonical identifiers.
+Sources provide transparency.
+
+## Current Features
+
+### Navigator Tab
+
+**Location:**
+
+app/(tabs)/navigator.tsx
+
+Provides:
+
+- Family-law-focused intake
+- Issue detection
+- Issue → authority mapping
+- Legal test display
+- Procedural risk listing
+
+### Authority Details Screen
+
+**Location:**
+
+app/resource/[id].tsx
+
+Displays:
+
+- Citation metadata
+- Authority type
+- Reverse linkage to related family law issues
+- Safe handling for unknown authorities
+
+### Authority ID Encoding
+
+**Location:**
+
+services/authorityIdHelpers.ts
+
+Encodes and decodes citations for safe navigation.
+
+### State Pack Data
+
+**Location:**
+
+
+
+Defines:
+
+- Family law domains
+- Issues
+- Authorities
+- Legal tests
+- Procedural risks
+- Issue mappings
+
+## Design Principles
+
+- Family-law-specific
+- Jurisdiction-aware
+- Transparent about gaps
+- Citation-first identity
+- Expandable to all 50 states
+- Versioned authority data
+- Designed to integrate legal aid pathways
+
+## Vision
+
+To give families clarity in complex legal processes.
+
+To ensure users understand:
+
+- What must be proven
+- What standards apply
+- What findings courts must enter
+- What procedural risks exist
+- What support pathways are available
+
+Before critical decisions are made.
