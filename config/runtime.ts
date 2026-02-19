@@ -1,15 +1,27 @@
+
 import { SeedAuthorityPackProvider } from "@/providers/SeedAuthorityPackProvider";
 import { HttpAuthorityPackProvider } from "@/providers/HttpAuthorityPackProvider";
 import type { AuthorityPackProvider } from "@/providers/AuthorityPackProvider";
 
-const PROVIDER = process.env.EXPO_PUBLIC_AUTHORITY_PACK_PROVIDER || "seed";
+class CompositeAuthorityPackProvider implements AuthorityPackProvider {
+  private http = new HttpAuthorityPackProvider();
+  private seed = new SeedAuthorityPackProvider();
 
-let provider: AuthorityPackProvider;
-
-if (PROVIDER === "http") {
-  provider = new HttpAuthorityPackProvider();
-} else {
-  provider = new SeedAuthorityPackProvider();
+  async getStatePack(state: string) {
+    const pack = await this.http.getStatePack(state);
+    if (pack) return pack;
+    return this.seed.getStatePack(state);
+  }
+  async getManifest() {
+    if (typeof this.http.getManifest === 'function') {
+      return this.http.getManifest();
+    }
+    return null;
+  }
 }
 
-export const authorityPackProvider: AuthorityPackProvider = provider;
+let provider: AuthorityPackProvider = new CompositeAuthorityPackProvider();
+
+export function getAuthorityPackProvider(): AuthorityPackProvider {
+  return provider;
+}

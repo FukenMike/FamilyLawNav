@@ -1,16 +1,27 @@
 import { useEffect, useState } from "react";
 import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, ScrollView, Switch } from "react-native";
+
 import { runNavigator } from "@/services/navigatorService";
-import { gaPack } from "@/data/statePacks/ga";
+import { fetchManifest, fetchPack } from "@/services/packStore";
 import type { Domain, IntakeQuestion, IntakeAnswer, NavigatorOutput } from "@/core/navigator/types";
 import { encodeAuthorityId } from "@/services/authorityIdHelpers";
 import { useRouter } from "expo-router";
 
-const STATES = ["GA"];
+const ALL_STATES = [
+  "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY"
+];
+
 
 export default function NavigatorScreen() {
-  const [state, setState] = useState("GA");
-  const [domainId, setDomainId] = useState(gaPack.domains[0]?.id || "");
+  const [state, setState] = useState(() => {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      return window.localStorage.getItem('lastState') || 'GA';
+    }
+    return 'GA';
+  });
+  const [manifest, setManifest] = useState<any>(null);
+  const [pack, setPack] = useState<any>(null);
+  const [domainId, setDomainId] = useState<string>("");
   const [questions, setQuestions] = useState<IntakeQuestion[]>([]);
   const [answers, setAnswers] = useState<Record<string, boolean>>({});
   const [output, setOutput] = useState<NavigatorOutput | null>(null);
@@ -18,18 +29,44 @@ export default function NavigatorScreen() {
   const [gap, setGap] = useState<string | null>(null);
   const router = useRouter();
 
+  // Load manifest and pack on state change
   useEffect(() => {
-    // For this seed, intake questions are not in the pack, so synthesize a few for demo
-    // In a real pack, these would be loaded from the pack
-    setQuestions([
-      { id: "q1", domainId, prompt: "Are you seeking initial custody?", type: "boolean" },
-      { id: "q2", domainId, prompt: "Is there a material change in circumstances?", type: "boolean" },
-      { id: "q3", domainId, prompt: "Is there an emergency?", type: "boolean" },
-    ]);
+    (async () => {
+      setPack(null);
+      setDomainId("");
+      setQuestions([]);
+      setAnswers({});
+      setOutput(null);
+      setGap(null);
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.setItem('lastState', state);
+      }
+      const m = await fetchManifest();
+      setManifest(m);
+      const p = await fetchPack(state);
+      setPack(p);
+      if (p && p.domains && p.domains.length > 0) {
+        setDomainId(p.domains[0].id);
+      }
+    })();
+  }, [state]);
+
+  // Update questions when domain or pack changes
+  useEffect(() => {
+    if (pack && domainId) {
+      // TODO: Use pack-provided questions if available
+      setQuestions([
+        { id: "q1", domainId, prompt: "Are you seeking initial custody?", type: "boolean" },
+        { id: "q2", domainId, prompt: "Is there a material change in circumstances?", type: "boolean" },
+        { id: "q3", domainId, prompt: "Is there an emergency?", type: "boolean" },
+      ]);
+    } else {
+      setQuestions([]);
+    }
     setAnswers({});
     setOutput(null);
     setGap(null);
-  }, [domainId, state]);
+  }, [domainId, pack]);
 
   const handleRun = async () => {
     setLoading(true);
@@ -56,7 +93,7 @@ export default function NavigatorScreen() {
       {/* State Selector */}
       <View style={styles.row}>
         <Text style={styles.label}>State:</Text>
-        {STATES.map(s => (
+        {ALL_STATES.map(s => (
           <TouchableOpacity
             key={s}
             style={[styles.stateBtn, state === s && styles.stateBtnActive]}
@@ -69,15 +106,19 @@ export default function NavigatorScreen() {
       {/* Domain Selector */}
       <View style={styles.row}>
         <Text style={styles.label}>Domain:</Text>
-        {gaPack.domains.map(d => (
-          <TouchableOpacity
-            key={d.id}
-            style={[styles.domainBtn, domainId === d.id && styles.domainBtnActive]}
-            onPress={() => setDomainId(d.id)}
-          >
-            <Text style={domainId === d.id ? styles.domainBtnTextActive : styles.domainBtnText}>{d.label}</Text>
-          </TouchableOpacity>
-        ))}
+        {pack && pack.domains && pack.domains.length > 0 ? (
+          pack.domains.map((d: any) => (
+            <TouchableOpacity
+              key={d.id}
+              style={[styles.domainBtn, domainId === d.id && styles.domainBtnActive]}
+              onPress={() => setDomainId(d.id)}
+            >
+              <Text style={domainId === d.id ? styles.domainBtnTextActive : styles.domainBtnText}>{d.label}</Text>
+            </TouchableOpacity>
+          ))
+        ) : (
+          <Text style={styles.value}>State pack not available yet</Text>
+        )}
       </View>
       {/* Intake Questions */}
       <View style={styles.section}>
@@ -94,7 +135,11 @@ export default function NavigatorScreen() {
           </View>
         ))}
       </View>
-      <TouchableOpacity style={styles.runBtn} onPress={handleRun} disabled={loading}>
+      <TouchableOpacity
+        style={styles.runBtn}
+        onPress={handleRun}
+        disabled={loading || !pack || !domainId}
+      >
         <Text style={styles.runBtnText}>{loading ? "Running..." : "Run Navigator"}</Text>
       </TouchableOpacity>
       {/* Output */}
@@ -114,7 +159,7 @@ export default function NavigatorScreen() {
                 <TouchableOpacity
                   key={i}
                   style={styles.authorityRow}
-                  onPress={() => router.push(`/resource/${encodeAuthorityId(c)}`)}
+                  onPress={() => router.push(`/resource/${encodeAuthorityId(c)}?state=${state}`)}
                   activeOpacity={0.7}
                 >
                   <Text style={styles.authorityText}>{c}</Text>

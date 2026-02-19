@@ -1,4 +1,4 @@
-import { authorityPackProvider } from "@/config/runtime";
+import { getAuthorityPackProvider } from "@/config/runtime";
 import type { NavigatorOutput, IntakeAnswer, DetectedIssue } from "@/core/navigator/types";
 import type { StatePack } from "@/data/statePacks/ga";
 
@@ -9,6 +9,7 @@ interface RunNavigatorParams {
 }
 
 export async function runNavigator({ state, domainId, answers }: RunNavigatorParams): Promise<NavigatorOutput> {
+  const authorityPackProvider = getAuthorityPackProvider();
   const pack: StatePack | null = await authorityPackProvider.getStatePack(state);
   if (!pack) {
     return {
@@ -25,16 +26,16 @@ export async function runNavigator({ state, domainId, answers }: RunNavigatorPar
     };
   }
 
-  // Simple rule-based detection for GA seed pack
-  const detectedIssues: DetectedIssue[] = [];
-  if (state.toUpperCase() === "GA" && domainId === "custody") {
-    // Example: if any answer is true, flag the first issue
+  // Pack-driven detection: if pack provides questions/rules, use them; otherwise, fallback to simple logic
+  let detectedIssues: DetectedIssue[] = [];
+  if (pack && pack.issues && pack.issues.length > 0) {
+    // Example: flag first issue if any boolean answer is true (baseline logic)
     const boolAnswers = answers.filter(a => typeof a.value === "boolean" && a.value === true);
     if (boolAnswers.length > 0) {
       detectedIssues.push({
-        issueId: "custody_initial",
+        issueId: pack.issues[0].id,
         confidence: 1,
-        reasons: ["Positive boolean answer detected (seed logic)"]
+        reasons: ["Positive boolean answer detected (baseline logic)"]
       });
     }
   }
@@ -45,8 +46,8 @@ export async function runNavigator({ state, domainId, answers }: RunNavigatorPar
   const trapsByIssue: Record<string, any[]> = {};
   for (const issue of detectedIssues) {
     authoritiesByIssue[issue.issueId] = pack.authoritiesByIssue[issue.issueId] || [];
-    testsByIssue[issue.issueId] = pack.legalTests.filter(t => t.issueId === issue.issueId);
-    trapsByIssue[issue.issueId] = pack.traps.filter(t => t.issueId === issue.issueId);
+    testsByIssue[issue.issueId] = pack.legalTests.filter((t: any) => t.issueId === issue.issueId);
+    trapsByIssue[issue.issueId] = pack.traps.filter((t: any) => t.issueId === issue.issueId);
   }
 
   return {
@@ -57,5 +58,6 @@ export async function runNavigator({ state, domainId, answers }: RunNavigatorPar
     testsByIssue,
     trapsByIssue,
     lastUpdated: new Date().toISOString(),
+    gaps: [],
   };
 }
