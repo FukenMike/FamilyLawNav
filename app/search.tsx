@@ -1,1 +1,6 @@
-// This file was created in error as a duplicate search screen. Please use your original functional search screen implementation.
+import { Redirect } from "expo-router";
+
+export default function SearchRoute() {
+  // /search is a legacy route; send users to the app root.
+  return <Redirect href="/" />;
+}
