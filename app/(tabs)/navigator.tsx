@@ -23,6 +23,7 @@ export default function NavigatorScreen() {
   const [manifest, setManifest] = useState<any>(null);
   const [pack, setPack] = useState<any>(null);
   const [packStatus, setPackStatus] = useState<PackStatus | null>(null);
+  const [refreshBusy, setRefreshBusy] = useState(false);
   const [domainId, setDomainId] = useState<string>("");
   const [questions, setQuestions] = useState<IntakeQuestion[]>([]);
   const [answers, setAnswers] = useState<Record<string, boolean>>({});
@@ -127,11 +128,13 @@ export default function NavigatorScreen() {
       <View style={{ marginBottom: 8 }}>
         <Text style={styles.label}>Pack:</Text>
         <Text style={styles.value}>
-          {packStatus ? (
-            `${packStatus.source}${packStatus.packVersion ? ` (v${packStatus.packVersion})` : ''}${packStatus.lastFetchedAt ? ` — ${timeSince(packStatus.lastFetchedAt)}` : ''}${packStatus.isStale ? ' (stale)' : ''}`
-          ) : 'none'}
+          {packStatus === null
+            ? '(loading)'
+            : packStatus.source === 'none'
+            ? 'none'
+            : `${packStatus.source} (v${packStatus.packVersion ?? 'unknown'})${packStatus.isStale ? ' (stale)' : ''}${packStatus.lastFetchedAt ? ` — ${timeSince(packStatus.lastFetchedAt)}` : ''}`}
         </Text>
-        {packStatus?.error && <Text style={styles.error}>Pack error: {packStatus.error}</Text>}
+        {packStatus?.error ? <Text style={styles.error}>Pack error: {packStatus.error}</Text> : null}
       </View>
 
       {/* Domain Selector */}
@@ -177,17 +180,23 @@ export default function NavigatorScreen() {
         <TouchableOpacity
           style={[styles.runBtn, { backgroundColor: '#eee', paddingHorizontal: 12 }]}
           onPress={async () => {
+            if (refreshBusy) return;
+            setRefreshBusy(true);
             try {
               setGap(null);
               const res = await getPack(state, { forceRemote: true });
+              // only replace pack if remote returned one; always update status
               if (res.pack) setPack(res.pack);
               setPackStatus(res.status);
             } catch (e: any) {
               setPackStatus(prev => ({ ...(prev || {}), error: e?.message || String(e) } as PackStatus));
+            } finally {
+              setRefreshBusy(false);
             }
           }}
+          disabled={refreshBusy}
         >
-          <Text style={[styles.runBtnText, { color: '#333' }]}>Refresh Pack</Text>
+          <Text style={[styles.runBtnText, { color: '#333' }]}>{refreshBusy ? 'Refreshing...' : 'Refresh Pack'}</Text>
         </TouchableOpacity>
       </View>
       {/* Output */}
