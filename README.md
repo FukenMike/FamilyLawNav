@@ -137,6 +137,18 @@ Encodes and decodes citations for safe navigation.
 
 **Location:**
 
+#### PackStatus & refresh behavior
+
+- The pack loader returns a `PackStatus` alongside the `StatePack` (via `getPack(state)`):
+  - `{ state, source, schemaVersion?, packVersion?, lastFetchedAt?, lastTriedAt?, error?, isStale?, cacheKey? }`.
+- `source` values: `remote | cache | seed | none` — indicates where the pack came from.
+- Cache rules: `PACK_CACHE_TTL_MS = 7 days`. Cache payloads include `{ cachedAt, state, schemaVersion, packVersion, pack }`.
+  - A cached pack is considered *stale* when older than TTL or when the manifest indicates a newer `packVersion`.
+- Navigator behavior:
+  - Shows a compact status line (source, version, staleness, age) under the State selector.
+  - **Refresh Pack** forces a remote fetch (`getPack(state, { forceRemote: true })`); on success the cache and UI are updated, on failure the previous pack (if any) is preserved and `status.error` is shown.
+  - `Run Navigator` is disabled when `status.source === 'none'` (no usable pack).
+- Available pack APIs (for UI/maintenance): `getPack`, `getCachedPack`, `clearCachedPack` — all surface `PackStatus` so the UI can make correct decisions and show health.
 
 
 Defines:
