@@ -1,6 +1,6 @@
 
-import type { StatePack } from "@/data/statePacks/ga";
 import type { AuthorityPackProvider } from "@/providers/AuthorityPackProvider";
+import type { StatePack } from "@/services/packStore";
 import { getPack, getManifest } from "@/services/packStore";
 
 export class HttpAuthorityPackProvider implements AuthorityPackProvider {

@@ -1,6 +1,6 @@
 import { getAuthorityPackProvider } from "@/config/runtime";
 import type { NavigatorOutput, IntakeAnswer, DetectedIssue } from "@/core/navigator/types";
-import type { StatePack } from "@/data/statePacks/ga";
+import type { StatePack } from "@/services/packStore";
 
 interface RunNavigatorParams {
   state: string;
