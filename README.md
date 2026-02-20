@@ -171,3 +171,16 @@ To ensure users understand:
 - What support pathways are available
 
 Before critical decisions are made.
+
+## Routing conventions (do not break)
+
+- The app shell is the Tabs layout in `app/(tabs)/_layout.tsx`.
+- Canonical screens live only in `app/(tabs)`:
+  - `app/(tabs)/search.tsx`
+  - `app/(tabs)/navigator.tsx`
+- Do not create root-level `app/search.tsx` or `app/navigator.tsx` (they shadow tabs and remove the tab bar).
+- Root `app/_layout.tsx` must render `<Slot />`.
+- Root `app/index.tsx` should only redirect to `/search`.
+
+To verify routing integrity:
+- `npm run check:routes`
