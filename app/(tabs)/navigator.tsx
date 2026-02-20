@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, ScrollView, Switch } from "react-native";
 
 import { runNavigator } from "@/services/navigatorService";
-import { fetchManifest, fetchPack } from "@/services/packStore";
+import { getManifest, getPack, PACK_CACHE_TTL_MS } from "@/services/packStore";
+import type { PackStatus } from "@/services/packStore";
 import type { Domain, IntakeQuestion, IntakeAnswer, NavigatorOutput } from "@/core/navigator/types";
 import { encodeAuthorityId } from "@/services/authorityIdHelpers";
 import { useRouter } from "expo-router";
@@ -21,6 +22,7 @@ export default function NavigatorScreen() {
   });
   const [manifest, setManifest] = useState<any>(null);
   const [pack, setPack] = useState<any>(null);
+  const [packStatus, setPackStatus] = useState<PackStatus | null>(null);
   const [domainId, setDomainId] = useState<string>("");
   const [questions, setQuestions] = useState<IntakeQuestion[]>([]);
   const [answers, setAnswers] = useState<Record<string, boolean>>({});
@@ -29,10 +31,27 @@ export default function NavigatorScreen() {
   const [gap, setGap] = useState<string | null>(null);
   const router = useRouter();
 
+  function timeSince(iso?: string) {
+    if (!iso) return '';
+    const diff = Date.now() - Date.parse(iso);
+    if (isNaN(diff)) return '';
+    const s = Math.floor(diff / 1000);
+    if (s < 30) return 'just now';
+    if (s < 60) return `${s}s`;
+    const m = Math.floor(s / 60);
+    if (m < 60) return `${m}m`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h`;
+    const d = Math.floor(h / 24);
+    if (d < 30) return `${d}d old`;
+    return new Date(iso).toLocaleDateString();
+  }
+
   // Load manifest and pack on state change
   useEffect(() => {
     (async () => {
       setPack(null);
+      setPackStatus(null);
       setDomainId("");
       setQuestions([]);
       setAnswers({});
@@ -41,12 +60,13 @@ export default function NavigatorScreen() {
       if (typeof window !== 'undefined' && window.localStorage) {
         window.localStorage.setItem('lastState', state);
       }
-      const m = await fetchManifest();
-      setManifest(m);
-      const p = await fetchPack(state);
-      setPack(p);
-      if (p && p.domains && p.domains.length > 0) {
-        setDomainId(p.domains[0].id);
+      const mRes = await getManifest();
+      setManifest(mRes.manifest);
+      const packRes = await getPack(state);
+      setPack(packRes.pack);
+      setPackStatus(packRes.status);
+      if (packRes.pack && packRes.pack.domains && packRes.pack.domains.length > 0) {
+        setDomainId(packRes.pack.domains[0].id);
       }
     })();
   }, [state]);
@@ -103,6 +123,17 @@ export default function NavigatorScreen() {
           </TouchableOpacity>
         ))}
       </View>
+      {/* Pack status */}
+      <View style={{ marginBottom: 8 }}>
+        <Text style={styles.label}>Pack:</Text>
+        <Text style={styles.value}>
+          {packStatus ? (
+            `${packStatus.source}${packStatus.packVersion ? ` (v${packStatus.packVersion})` : ''}${packStatus.lastFetchedAt ? ` — ${timeSince(packStatus.lastFetchedAt)}` : ''}${packStatus.isStale ? ' (stale)' : ''}`
+          ) : 'none'}
+        </Text>
+        {packStatus?.error && <Text style={styles.error}>Pack error: {packStatus.error}</Text>}
+      </View>
+
       {/* Domain Selector */}
       <View style={styles.row}>
         <Text style={styles.label}>Domain:</Text>
@@ -135,13 +166,30 @@ export default function NavigatorScreen() {
           </View>
         ))}
       </View>
-      <TouchableOpacity
-        style={styles.runBtn}
-        onPress={handleRun}
-        disabled={loading || !pack || !domainId}
-      >
-        <Text style={styles.runBtnText}>{loading ? "Running..." : "Run Navigator"}</Text>
-      </TouchableOpacity>
+      <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+        <TouchableOpacity
+          style={styles.runBtn}
+          onPress={handleRun}
+          disabled={loading || !pack || !domainId || (packStatus?.source === 'none')}
+        >
+          <Text style={styles.runBtnText}>{loading ? "Running..." : "Run Navigator"}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.runBtn, { backgroundColor: '#eee', paddingHorizontal: 12 }]}
+          onPress={async () => {
+            try {
+              setGap(null);
+              const res = await getPack(state, { forceRemote: true });
+              if (res.pack) setPack(res.pack);
+              setPackStatus(res.status);
+            } catch (e: any) {
+              setPackStatus(prev => ({ ...(prev || {}), error: e?.message || String(e) } as PackStatus));
+            }
+          }}
+        >
+          <Text style={[styles.runBtnText, { color: '#333' }]}>Refresh Pack</Text>
+        </TouchableOpacity>
+      </View>
       {/* Output */}
       {gap && <Text style={styles.gap}>{gap}</Text>}
       {output && (
@@ -277,6 +325,11 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginTop: 12,
     marginBottom: 8,
+  },
+  error: {
+    color: '#b00020',
+    fontWeight: 'bold',
+    marginTop: 6,
   },
   value: {
     color: "#222",
