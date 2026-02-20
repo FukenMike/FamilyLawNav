@@ -94,6 +94,13 @@ export const authorities: Record<string, {
 
 export const gaPack = {
   state,
+  schemaVersion: 1,
+  packVersion: 'seed-ga-2026-02-20',
+  jurisdictions_sources: {
+    code: 'https://law.justia.com/codes/georgia/',
+    rules: '',
+    opinions: '',
+  },
   domains,
   issues,
   authoritiesByIssue,
