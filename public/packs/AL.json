@@ -1,5 +1,5 @@
 {
-  "quality": "baseline",
+  "quality": "curated",
   "schemaVersion": "1",
   "state": "AL",
   "packVersion": "2026.02.21",
@@ -141,6 +141,6 @@
   ],
   "metadata": {
     "level": "baseline",
-    "generatedAt": "2026-02-21T03:14:35.656Z"
+    "generatedAt": "2026-02-21T06:08:49.373Z"
   }
 }
