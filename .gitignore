@@ -42,8 +42,7 @@ app-example
 /ios
 /android
 
-# generated pack files
-public/packs/
+# generated pack files (remove this line if you want to track baseline packs)
 
 # TypeScript generator (compiled JS is used)
 scripts/generate-baseline-packs.ts
