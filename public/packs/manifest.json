@@ -1,0 +1,158 @@
+{
+  "schemaVersion": "1",
+  "packs": {
+    "AL": {
+      "packVersion": "2026.02.21"
+    },
+    "AK": {
+      "packVersion": "2026.02.21"
+    },
+    "AZ": {
+      "packVersion": "2026.02.21"
+    },
+    "AR": {
+      "packVersion": "2026.02.21"
+    },
+    "CA": {
+      "packVersion": "2026.02.21"
+    },
+    "CO": {
+      "packVersion": "2026.02.21"
+    },
+    "CT": {
+      "packVersion": "2026.02.21"
+    },
+    "DE": {
+      "packVersion": "2026.02.21"
+    },
+    "FL": {
+      "packVersion": "2026.02.21"
+    },
+    "GA": {
+      "packVersion": "2026.02.21"
+    },
+    "HI": {
+      "packVersion": "2026.02.21"
+    },
+    "ID": {
+      "packVersion": "2026.02.21"
+    },
+    "IL": {
+      "packVersion": "2026.02.21"
+    },
+    "IN": {
+      "packVersion": "2026.02.21"
+    },
+    "IA": {
+      "packVersion": "2026.02.21"
+    },
+    "KS": {
+      "packVersion": "2026.02.21"
+    },
+    "KY": {
+      "packVersion": "2026.02.21"
+    },
+    "LA": {
+      "packVersion": "2026.02.21"
+    },
+    "ME": {
+      "packVersion": "2026.02.21"
+    },
+    "MD": {
+      "packVersion": "2026.02.21"
+    },
+    "MA": {
+      "packVersion": "2026.02.21"
+    },
+    "MI": {
+      "packVersion": "2026.02.21"
+    },
+    "MN": {
+      "packVersion": "2026.02.21"
+    },
+    "MS": {
+      "packVersion": "2026.02.21"
+    },
+    "MO": {
+      "packVersion": "2026.02.21"
+    },
+    "MT": {
+      "packVersion": "2026.02.21"
+    },
+    "NE": {
+      "packVersion": "2026.02.21"
+    },
+    "NV": {
+      "packVersion": "2026.02.21"
+    },
+    "NH": {
+      "packVersion": "2026.02.21"
+    },
+    "NJ": {
+      "packVersion": "2026.02.21"
+    },
+    "NM": {
+      "packVersion": "2026.02.21"
+    },
+    "NY": {
+      "packVersion": "2026.02.21"
+    },
+    "NC": {
+      "packVersion": "2026.02.21"
+    },
+    "ND": {
+      "packVersion": "2026.02.21"
+    },
+    "OH": {
+      "packVersion": "2026.02.21"
+    },
+    "OK": {
+      "packVersion": "2026.02.21"
+    },
+    "OR": {
+      "packVersion": "2026.02.21"
+    },
+    "PA": {
+      "packVersion": "2026.02.21"
+    },
+    "RI": {
+      "packVersion": "2026.02.21"
+    },
+    "SC": {
+      "packVersion": "2026.02.21"
+    },
+    "SD": {
+      "packVersion": "2026.02.21"
+    },
+    "TN": {
+      "packVersion": "2026.02.21"
+    },
+    "TX": {
+      "packVersion": "2026.02.21"
+    },
+    "UT": {
+      "packVersion": "2026.02.21"
+    },
+    "VT": {
+      "packVersion": "2026.02.21"
+    },
+    "VA": {
+      "packVersion": "2026.02.21"
+    },
+    "WA": {
+      "packVersion": "2026.02.21"
+    },
+    "WV": {
+      "packVersion": "2026.02.21"
+    },
+    "WI": {
+      "packVersion": "2026.02.21"
+    },
+    "WY": {
+      "packVersion": "2026.02.21"
+    },
+    "DC": {
+      "packVersion": "2026.02.21"
+    }
+  }
+}
