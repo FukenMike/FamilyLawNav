@@ -6,8 +6,16 @@ const OUT_DIR = join(process.cwd(), 'public', 'packs');
 mkdirSync(OUT_DIR, { recursive: true });
 
 const schemaVersion = '1';
-const packVersion = new Date().toISOString().slice(0,10).replace(/-/g, '.');
-const generatedAt = new Date().toISOString();
+// compute local date string (America/New_York) YYYY.MM.DD
+const now = new Date();
+const localDate = now.toLocaleDateString('en-CA', { timeZone: 'America/New_York' }); // yields YYYY-MM-DD
+const packVersion = localDate.replace(/-/g, '.');
+const generatedAt = now.toISOString();
+// sanity: packVersion must not be in future relative to localDate
+const today = localDate.replace(/-/g, '.');
+if (packVersion > today) {
+  throw new Error(`computed packVersion ${packVersion} is in the future`);
+}
 
 // import national shell definitions
 const shell = require('../data/nationalShell');
@@ -23,6 +31,10 @@ const states = [
 ];
 
 const manifest = { schemaVersion, packs: {} };
+
+let created = 0;
+let updated = 0;
+let skipped = 0;
 
 for (const st of states) {
   const pack = {
@@ -43,14 +55,27 @@ for (const st of states) {
   };
   const path = join(OUT_DIR, `${st}.json`);
   let shouldWrite = true;
-  if (st === 'GA' && require('fs').existsSync(path)) {
+  if (require('fs').existsSync(path)) {
     try {
       const existing = JSON.parse(require('fs').readFileSync(path, 'utf8'));
       if (existing.quality && existing.quality !== 'baseline') {
-        // curated GA exists, do not overwrite
+        // curated pack; skip entirely
         shouldWrite = false;
+        skipped++;
+      } else {
+        // baseline exists; will overwrite
+        shouldWrite = true;
+        updated++;
       }
-    } catch {}
+    } catch {
+      // if parse fails, overwrite
+      shouldWrite = true;
+      updated++;
+    }
+  } else {
+    // new file
+    created++;
+    shouldWrite = true;
   }
   if (shouldWrite) {
     writeFileSync(path, JSON.stringify(pack, null, 2));
@@ -59,4 +84,12 @@ for (const st of states) {
 }
 
 writeFileSync(join(OUT_DIR, 'manifest.json'), JSON.stringify(manifest, null, 2));
-console.log('Generated baseline packs for', states.length, 'states.');
+console.log(`created ${created}, updated ${updated}, skipped curated ${skipped}`);
+// run pack checks
+try {
+  const { execSync } = require('child_process');
+  execSync('REQUIRE_PACK_FILES=1 npm run check:packs', { stdio: 'inherit' });
+} catch (e) {
+  console.error('pack check failed');
+  process.exit(1);
+}
