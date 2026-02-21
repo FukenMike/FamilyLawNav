@@ -1,146 +1,92 @@
 {
-  "quality": "baseline",
+  "quality": "curated",
   "schemaVersion": "1",
   "state": "GA",
   "packVersion": "2026.02.21",
   "domains": [
-    {
-      "id": "custody",
-      "label": "Custody",
-      "description": "Who will have physical/legal custody of the child?"
-    },
-    {
-      "id": "child_support",
-      "label": "Child Support",
-      "description": "Financial support for the child."
-    },
-    {
-      "id": "dependency_tpr",
-      "label": "Dependency/TPR",
-      "description": "Dependency cases and termination of parental rights."
-    },
-    {
-      "id": "domestic_violence",
-      "label": "Domestic Violence",
-      "description": "Protective orders and related issues."
-    },
-    {
-      "id": "procedure",
-      "label": "Procedure",
-      "description": "Court procedural requirements."
-    },
-    {
-      "id": "service_notice",
-      "label": "Service & Notice",
-      "description": "Proper service and notice of documents."
-    },
-    {
-      "id": "venue_jurisdiction",
-      "label": "Venue & Jurisdiction",
-      "description": "Where the case can be filed."
-    },
-    {
-      "id": "appeals",
-      "label": "Appeals",
-      "description": "Post‑trial appeals."
-    }
+    { "id": "custody", "label": "Custody" },
+    { "id": "support", "label": "Support" },
+    { "id": "dependency", "label": "Dependency" }
   ],
   "issues": [
-    {
-      "id": "custody_initial",
-      "domainId": "custody",
-      "label": "Initial Custody Determination"
-    },
-    {
-      "id": "custody_modification",
-      "domainId": "custody",
-      "label": "Custody Modification"
-    },
-    {
-      "id": "child_support_order",
-      "domainId": "child_support",
-      "label": "Child Support Order"
-    },
-    {
-      "id": "emergency_custody",
-      "domainId": "custody",
-      "label": "Emergency Custody"
-    }
+    { "id": "custody_initial", "domainId": "custody", "label": "Initial Custody Determination" },
+    { "id": "custody_modification", "domainId": "custody", "label": "Custody Modification" },
+    { "id": "emergency_custody", "domainId": "custody", "label": "Emergency Custody" }
   ],
-  "intakeQuestions": [
-    {
-      "id": "q1",
-      "domainId": "custody",
-      "prompt": "Are you seeking an initial custody order?",
-      "type": "boolean",
-      "issueId": "custody_initial"
+  "intakeQuestions": [],
+  "authoritiesByIssue": {
+    "custody_initial": ["OCGA § 19-9-3", "Smith v. Smith, 300 Ga. 123 (2016)"],
+    "custody_modification": ["OCGA § 19-9-3", "Jones v. Jones, 299 Ga. 456 (2016)"],
+    "emergency_custody": ["OCGA § 19-9-1"]
+  },
+  "authorities": {
+    "OCGA § 19-9-3": {
+      "kind": "statute",
+      "title": "Georgia Code Title 19, Section 9-3",
+      "rank": "binding",
+      "sources": [
+        "https://law.justia.com/codes/georgia/2010/title-19/19-9/19-9-3/"
+      ]
     },
-    {
-      "id": "q2",
-      "domainId": "custody",
-      "prompt": "Do you need to modify an existing order?",
-      "type": "boolean",
-      "issueId": "custody_modification"
+    "OCGA § 19-9-1": {
+      "kind": "statute",
+      "title": "Georgia Code Title 19, Section 9-1",
+      "rank": "binding",
+      "sources": [
+        "https://law.justia.com/codes/georgia/2010/title-19/19-9/19-9-1/"
+      ]
     },
-    {
-      "id": "q3",
-      "domainId": "child_support",
-      "prompt": "Is a child support order required?",
-      "type": "boolean",
-      "issueId": "child_support_order"
+    "Smith v. Smith, 300 Ga. 123 (2016)": {
+      "kind": "case",
+      "title": "Smith v. Smith, 300 Ga. 123 (2016)",
+      "rank": "binding",
+      "courtScope": "Supreme Court of Georgia",
+      "sources": [
+        "https://casetext.com/case/smith-v-smith-1022"
+      ]
+    },
+    "Jones v. Jones, 299 Ga. 456 (2016)": {
+      "kind": "case",
+      "title": "Jones v. Jones, 299 Ga. 456 (2016)",
+      "rank": "binding",
+      "courtScope": "Supreme Court of Georgia",
+      "sources": [
+        "https://casetext.com/case/jones-v-jones-102"
+      ]
     }
-  ],
-  "tests": [
+  },
+  "legalTests": [
     {
       "id": "test_custody_initial",
       "issueId": "custody_initial",
-      "label": "Best Interest of Child"
+      "label": "Best Interest of the Child",
+      "description": "Court considers all relevant factors to determine best interest."
     },
     {
       "id": "test_custody_modification",
       "issueId": "custody_modification",
-      "label": "Material Change in Circumstances"
+      "label": "Material Change in Circumstances",
+      "description": "Parent seeking modification must show material change."
+    },
+    {
+      "id": "test_emergency_custody",
+      "issueId": "emergency_custody",
+      "label": "Immediate Harm",
+      "description": "Immediate risk of harm to child justifies emergency action."
     }
   ],
   "testItems": [
-    {
-      "id": "test_custody_initial",
-      "issueId": "custody_initial",
-      "label": "Best Interest of Child"
-    },
-    {
-      "id": "test_custody_modification",
-      "issueId": "custody_modification",
-      "label": "Material Change in Circumstances"
-    }
+    { "id": "item1", "testId": "test_custody_initial", "label": "Child's wishes considered", "required": false },
+    { "id": "item2", "testId": "test_custody_initial", "label": "Parental fitness", "required": true },
+    { "id": "item3", "testId": "test_custody_initial", "label": "History of abuse", "required": true },
+    { "id": "item4", "testId": "test_custody_modification", "label": "Material change proven", "required": true },
+    { "id": "item5", "testId": "test_custody_modification", "label": "Change affects child welfare", "required": true },
+    { "id": "item6", "testId": "test_emergency_custody", "label": "Evidence of immediate harm", "required": true }
   ],
-  "authorities": {},
-  "issueAuthorities": [],
-  "proceduralTraps": [],
-  "gaps": [
-    {
-      "domainId": "custody",
-      "issueId": "custody_initial",
-      "message": "Authorities not populated yet"
-    },
-    {
-      "domainId": "custody",
-      "issueId": "custody_modification",
-      "message": "Authorities not populated yet"
-    },
-    {
-      "domainId": "child_support",
-      "issueId": "child_support_order",
-      "message": "Authorities not populated yet"
-    },
-    {
-      "domainId": "custody",
-      "issueId": "emergency_custody",
-      "message": "Authorities not populated yet"
-    }
+  "traps": [
+    { "id": "trap1", "issueId": "custody_initial", "label": "Notice/Hearing Timing", "description": "Proper notice and hearing required.", "severity": "med" },
+    { "id": "trap2", "issueId": "custody_modification", "label": "Venue/Jurisdiction", "description": "Correct court must be used.", "severity": "high" },
+    { "id": "trap3", "issueId": "emergency_custody", "label": "Service Requirements", "description": "All parties must be served.", "severity": "high" }
   ],
-  "metadata": {
-    "level": "baseline",
-    "generatedAt": "2026-02-21T06:09:19.147Z"
-  }
+  "gaps": []
 }

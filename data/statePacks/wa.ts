@@ -4,7 +4,7 @@ export const state = 'WA';
 
 export const waPack: StatePack = {
   state,
-  schemaVersion: 1,
+  schemaVersion: "1",
   packVersion: 'baseline-2026-02-20',
   jurisdictions_sources: { code: '', rules: '', opinions: '' },
   domains: [],

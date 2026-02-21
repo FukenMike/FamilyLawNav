@@ -4,7 +4,7 @@ export const state = 'MA';
 
 export const maPack: StatePack = {
   state,
-  schemaVersion: 1,
+  schemaVersion: "1",
   packVersion: 'baseline-2026-02-20',
   jurisdictions_sources: { code: '', rules: '', opinions: '' },
   domains: [],

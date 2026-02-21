@@ -2,6 +2,7 @@
 import { SeedAuthorityPackProvider } from "@/providers/SeedAuthorityPackProvider";
 import { HttpAuthorityPackProvider } from "@/providers/HttpAuthorityPackProvider";
 import type { AuthorityPackProvider } from "@/providers/AuthorityPackProvider";
+import { normalizePack } from "@/services/normalizePack";
 
 class CompositeAuthorityPackProvider implements AuthorityPackProvider {
   private http = new HttpAuthorityPackProvider();
@@ -9,8 +10,10 @@ class CompositeAuthorityPackProvider implements AuthorityPackProvider {
 
   async getStatePack(state: string) {
     const pack = await this.http.getStatePack(state);
-    if (pack) return pack;
-    return this.seed.getStatePack(state);
+    if (pack) return normalizePack(pack);
+    const seedPack = await this.seed.getStatePack(state);
+    if (seedPack) return normalizePack(seedPack);
+    return seedPack;
   }
   async getManifest() {
     if (typeof this.http.getManifest === 'function') {
