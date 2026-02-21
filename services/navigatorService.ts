@@ -1,4 +1,4 @@
-import { getAuthorityPackProvider } from "@/config/runtime";
+import { getPack } from "@/services/packStore";
 import type { NavigatorOutput, IntakeAnswer, DetectedIssue } from "@/core/navigator/types";
 import type { StatePack } from "@/services/packStore";
 
@@ -9,8 +9,7 @@ interface RunNavigatorParams {
 }
 
 export async function runNavigator({ state, domainId, answers }: RunNavigatorParams): Promise<NavigatorOutput> {
-  const authorityPackProvider = getAuthorityPackProvider();
-  const pack: StatePack | null = await authorityPackProvider.getStatePack(state);
+  const { pack, status } = await getPack(state);
   if (!pack) {
     return {
       state,

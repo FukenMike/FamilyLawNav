@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ActivityIndicator, ScrollView } from 'react-nat
 
 import { useLocalSearchParams } from 'expo-router'
 import { decodeAuthorityId } from '@/services/authorityIdHelpers'
-import { getAuthorityPackProvider } from '@/config/runtime'
+import { getPack } from '@/services/packStore'
 
 export default function ResourceRoute() {
   const { id, state } = useLocalSearchParams<{ id: string, state?: string }>();
@@ -23,8 +23,8 @@ export default function ResourceRoute() {
     setError(null);
     const citation = decodeAuthorityId(id);
     setDecodedCitation(citation);
-    const provider = getAuthorityPackProvider();
-    provider.getStatePack(state).then(pack => {
+    getPack(state).then(res => {
+      const pack = res.pack;
       if (!pack || !pack.authorities) {
         setAuthority(null);
         setReferencedBy([]);
@@ -32,10 +32,10 @@ export default function ResourceRoute() {
         return;
       }
       const meta = pack.authorities[citation] || null;
-      // Find which issues reference this citation
       const referenced: string[] = [];
       for (const [issueId, citations] of Object.entries(pack.authoritiesByIssue || {})) {
-        if (citations.includes(citation)) referenced.push(issueId);
+        const list = citations as string[];
+        if (list.includes(citation)) referenced.push(issueId);
       }
       setAuthority(meta);
       setReferencedBy(referenced);
