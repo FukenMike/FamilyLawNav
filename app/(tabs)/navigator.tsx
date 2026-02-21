@@ -132,7 +132,7 @@ export default function NavigatorScreen() {
             ? '(loading)'
             : packStatus.source === 'none'
             ? 'none'
-            : `${packStatus.source} (v${packStatus.packVersion ?? 'unknown'})${packStatus.isStale ? ' (stale)' : ''}${packStatus.lastFetchedAt ? ` — ${timeSince(packStatus.lastFetchedAt)}` : ''}`}
+            : `${packStatus.source} (v${packStatus.packVersion ?? 'unknown'})${pack?.quality === 'baseline' ? ' (baseline)' : ''}${packStatus.isStale ? ' (stale)' : ''}${packStatus.lastFetchedAt ? ` — ${timeSince(packStatus.lastFetchedAt)}` : ''}`}
         </Text>
         {packStatus?.error ? <Text style={styles.error}>Pack error: {packStatus.error}</Text> : null}
       </View>
@@ -173,7 +173,14 @@ export default function NavigatorScreen() {
         <TouchableOpacity
           style={styles.runBtn}
           onPress={handleRun}
-          disabled={loading || !pack || !domainId || (packStatus?.source === 'none')}
+          disabled={
+            loading ||
+            !pack ||
+            !domainId ||
+            packStatus?.source === 'none' ||
+            pack?.quality === 'baseline' ||
+            !(pack?.domains && pack.domains.length > 0)
+          }
         >
           <Text style={styles.runBtnText}>{loading ? "Running..." : "Run Navigator"}</Text>
         </TouchableOpacity>

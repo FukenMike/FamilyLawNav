@@ -32,16 +32,34 @@ const manifest = { schemaVersion, packs: {} };
 
 for (const st of states) {
   const pack = {
+    quality: 'baseline',
     schemaVersion,
     state: st,
     packVersion,
     domains,
     issues: {},
     authorities: {},
+    issueAuthorities: [],
+    tests: [],
+    testItems: [],
+    proceduralTraps: [],
+    gaps: [],
     metadata: { level: 'baseline', generatedAt }
   };
   const path = join(OUT_DIR, `${st}.json`);
-  writeFileSync(path, JSON.stringify(pack, null, 2));
+  let shouldWrite = true;
+  if (st === 'GA' && require('fs').existsSync(path)) {
+    try {
+      const existing = JSON.parse(require('fs').readFileSync(path, 'utf8'));
+      if (existing.quality && existing.quality !== 'baseline') {
+        // curated GA exists, do not overwrite
+        shouldWrite = false;
+      }
+    } catch {}
+  }
+  if (shouldWrite) {
+    writeFileSync(path, JSON.stringify(pack, null, 2));
+  }
   manifest.packs[st] = { packVersion };
 }
 

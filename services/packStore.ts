@@ -118,28 +118,28 @@ async function removeLocal(key: string): Promise<void> {
   delete memoryCache[key];
 }
 
-// simple validators to ensure runtime data matches expected schema
-function validateManifest(x: any): x is Manifest {
-  if (!x || typeof x !== 'object') return false;
-  if (typeof x.schemaVersion !== 'string') return false;
-  if (!x.packs || typeof x.packs !== 'object') return false;
+// simple validators returning result object
+function validateManifest(x: any): { ok: boolean; error?: string } {
+  if (!x || typeof x !== 'object') return { ok: false, error: 'manifest not object' };
+  if (typeof x.schemaVersion !== 'string') return { ok: false, error: 'schemaVersion missing or not string' };
+  if (!x.packs || typeof x.packs !== 'object') return { ok: false, error: 'packs missing or not object' };
   for (const state of Object.keys(x.packs)) {
     const entry = x.packs[state];
-    if (!entry || typeof entry.packVersion !== 'string') return false;
-    if (entry.sha256 && typeof entry.sha256 !== 'string') return false;
+    if (!entry || typeof entry.packVersion !== 'string') return { ok: false, error: `invalid pack entry for ${state}` };
+    if (entry.sha256 && typeof entry.sha256 !== 'string') return { ok: false, error: `invalid sha256 for ${state}` };
   }
-  return true;
+  return { ok: true };
 }
 
-function validateStatePack(p: any): boolean {
-  if (!p || typeof p !== 'object') return false;
-  if (typeof p.schemaVersion === 'undefined') return false;
-  if (typeof p.state !== 'string') return false;
-  if (typeof p.packVersion !== 'string') return false;
-  if (!Array.isArray(p.domains)) return false;
-  if (!Array.isArray(p.issues)) return false;
-  if (!p.authorities || typeof p.authorities !== 'object') return false;
-  return true;
+function validateStatePack(p: any): { ok: boolean; error?: string } {
+  if (!p || typeof p !== 'object') return { ok: false, error: 'pack not object' };
+  if (typeof p.schemaVersion !== 'string') return { ok: false, error: 'schemaVersion missing or not string' };
+  if (typeof p.state !== 'string') return { ok: false, error: 'state missing or not string' };
+  if (typeof p.packVersion !== 'string') return { ok: false, error: 'packVersion missing or not string' };
+  if (!Array.isArray(p.domains)) return { ok: false, error: 'domains not array' };
+  if (!Array.isArray(p.issues)) return { ok: false, error: 'issues not array' };
+  if (!p.authorities || typeof p.authorities !== 'object') return { ok: false, error: 'authorities missing or not object' };
+  return { ok: true };
 }
 
 // Read manifest from remote, but return cached manifest if remote unavailable.  Maintain TTL.
@@ -160,14 +160,12 @@ export async function getManifest(opts?: { force?: boolean }): Promise<{ manifes
       const resp = await fetch(MANIFEST_URL);
       if (!resp.ok) throw new Error(`Manifest fetch failed: ${resp.status}`);
       const candidate = await resp.json();
-      if (validateManifest(candidate)) {
-        manifest = candidate;
-        await setLocal(manifestCacheKey, { manifest: candidate, cachedAt: new Date().toISOString() });
-        status.source = 'remote';
-        status.schemaVersion = candidate.schemaVersion;
-      } else {
-        throw new Error('Manifest validation failed');
-      }
+      const v = validateManifest(candidate);
+      if (!v.ok) throw new Error(v.error || 'Manifest validation failed');
+      manifest = candidate;
+      await setLocal(manifestCacheKey, { manifest: candidate, cachedAt: new Date().toISOString() });
+      status.source = 'remote';
+      status.schemaVersion = candidate.schemaVersion;
     } catch (err: any) {
       status.error = err?.message || String(err);
       // keep previous manifest if any
@@ -200,7 +198,12 @@ export async function getCachedPack(state: string): Promise<{ pack: StatePack | 
 
   for (const k of keys) {
     const payload = await getLocal(k) as CachedPackPayload | null;
-    if (payload && payload.pack && validateStatePack(payload.pack)) {
+    if (payload && payload.pack) {
+      const v = validateStatePack(payload.pack);
+      if (!v.ok) {
+        debug('cached pack validation failed', state, v.error);
+        continue;
+      }
       const now = Date.now();
       const cachedAtMs = Date.parse(payload.cachedAt || '') || 0;
       const age = now - cachedAtMs;
@@ -246,7 +249,7 @@ export async function getPack(state: string, opts?: { forceRemote?: boolean }): 
   const statusBase: PackStatus = { state, source: 'none', lastTriedAt: triedAt };
 
   // manifest might inform version checks
-  const { manifest } = await getManifest().catch(() => ({ manifest: null }));
+  let { manifest } = await getManifest().catch(() => ({ manifest: null }));
   const manifestPackVersion = manifest?.packs?.[state]?.packVersion;
   const manifestSchema = manifest?.schemaVersion;
 
@@ -254,11 +257,15 @@ export async function getPack(state: string, opts?: { forceRemote?: boolean }): 
   const tryRemote = async (): Promise<{ pack: StatePack | null; status: PackStatus } | null> => {
     const url = PACK_URL(state);
     if (!url) return null;
+    // fetch fresh manifest too
+    const manresp = await getManifest({ force: true });
+    if (manresp.manifest) manifest = manresp.manifest; // update outer
     try {
       const resp = await fetch(url);
       if (!resp.ok) throw new Error(`Remote fetch failed: ${resp.status}`);
       const pack = await resp.json();
-      if (!validateStatePack(pack)) throw new Error('Remote pack failed validation');
+      const v = validateStatePack(pack);
+      if (!v.ok) throw new Error(v.error || 'Remote pack failed validation');
       const schemaVersion = String(pack.schemaVersion);
       const packVersion = String(pack.packVersion || manifestPackVersion || 'remote');
       const payload: CachedPackPayload = { cachedAt: new Date().toISOString(), state, schemaVersion, packVersion, pack };
@@ -298,15 +305,20 @@ export async function getPack(state: string, opts?: { forceRemote?: boolean }): 
     const { SeedAuthorityPackProvider } = require('@/providers/SeedAuthorityPackProvider');
     const seedProv = new SeedAuthorityPackProvider();
     const seedPack = await seedProv.getStatePack(state);
-    if (seedPack && validateStatePack(seedPack)) {
-      const schemaVersion = String(seedPack.schemaVersion || 'unknown');
-      const packVersion = String(seedPack.packVersion || 'seed');
-      const payload: CachedPackPayload = { cachedAt: new Date().toISOString(), state, schemaVersion, packVersion, pack: seedPack };
-      const key = packCacheKey(state, schemaVersion, packVersion);
-      await setLocal(key, payload);
-      const status: PackStatus = { ...statusBase, source: 'seed', packVersion, schemaVersion, lastFetchedAt: payload.cachedAt, cacheKey: key };
-      debug('seed fallback', status);
-      return { pack: seedPack, status };
+    if (seedPack) {
+      const v2 = validateStatePack(seedPack);
+      if (!v2.ok) {
+        debug('seed pack validation failed', state, v2.error);
+      } else {
+        const schemaVersion = String(seedPack.schemaVersion || 'unknown');
+        const packVersion = String(seedPack.packVersion || 'seed');
+        const payload: CachedPackPayload = { cachedAt: new Date().toISOString(), state, schemaVersion, packVersion, pack: seedPack };
+        const key = packCacheKey(state, schemaVersion, packVersion);
+        await setLocal(key, payload);
+        const status: PackStatus = { ...statusBase, source: 'seed', packVersion, schemaVersion, lastFetchedAt: payload.cachedAt, cacheKey: key };
+        debug('seed fallback', status);
+        return { pack: seedPack, status };
+      }
     }
   } catch (e) {
     // ignore

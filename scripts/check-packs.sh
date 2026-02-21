@@ -29,8 +29,8 @@ fi
 
 # optional pack-file existence enforcement
 if [ "${REQUIRE_PACK_FILES:-0}" = "1" ]; then
-  # collect pack keys (two-letter state codes) within packs object
-  keys=$(awk '/"packs"[[:space:]]*:/,/\}/ { if ($0 ~ /"[A-Z][A-Z]"/) { gsub(/.*"([A-Z][A-Z])".*/, "\1"); print } }' "$manifest" | sort -u)
+  # collect pack keys (two-letter state codes) within packs object using grep
+  keys=$(grep -o '"[A-Z][A-Z]"' "$manifest" | tr -d '"' | sort -u)
   for s in $keys; do
     if [ ! -f "public/packs/$s.json" ]; then
       echo "ERROR: pack file missing for state $s"
