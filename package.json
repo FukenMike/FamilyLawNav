@@ -9,7 +9,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "check:routes": "bash scripts/check-routes.sh"
+    "check:routes": "bash scripts/check-routes.sh",
+    "check:packs": "bash scripts/check-packs.sh"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
