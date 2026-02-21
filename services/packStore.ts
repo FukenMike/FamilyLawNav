@@ -3,9 +3,20 @@
 
 import { Platform } from 'react-native';
 
-const BASE_URL = process.env.EXPO_PUBLIC_PACKS_BASE_URL;
-const MANIFEST_URL = BASE_URL ? `${BASE_URL}/manifest.json` : null;
-const PACK_URL = (state: string) => BASE_URL ? `${BASE_URL}/packs/${state}.json` : null;
+// base url for packs; may be blank in production (use relative)
+const rawBase = process.env.EXPO_PUBLIC_PACKS_BASE_URL || '';
+const BASE_URL = rawBase.trim().replace(/\/+$/, ''); // remove trailing slashes
+
+function resolvePath(path: string): string {
+  // always return path starting with '/'
+  if (BASE_URL) {
+    return BASE_URL + path;
+  }
+  return path;
+}
+
+const MANIFEST_URL = resolvePath('/packs/manifest.json');
+const PACK_URL = (state: string) => resolvePath(`/packs/${state}.json`);
 
 // Constants
 export const PACK_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
