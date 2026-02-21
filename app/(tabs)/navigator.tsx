@@ -75,12 +75,16 @@ export default function NavigatorScreen() {
   // Update questions when domain or pack changes
   useEffect(() => {
     if (pack && domainId) {
-      // TODO: Use pack-provided questions if available
-      setQuestions([
-        { id: "q1", domainId, prompt: "Are you seeking initial custody?", type: "boolean" },
-        { id: "q2", domainId, prompt: "Is there a material change in circumstances?", type: "boolean" },
-        { id: "q3", domainId, prompt: "Is there an emergency?", type: "boolean" },
-      ]);
+      // prefer pack-provided intake questions
+      if (Array.isArray(pack.intakeQuestions) && pack.intakeQuestions.length > 0) {
+        setQuestions(pack.intakeQuestions.filter((q: any) => q.domainId === domainId));
+      } else {
+        setQuestions([
+          { id: "q1", domainId, prompt: "Are you seeking initial custody?", type: "boolean" },
+          { id: "q2", domainId, prompt: "Is there a material change in circumstances?", type: "boolean" },
+          { id: "q3", domainId, prompt: "Is there an emergency?", type: "boolean" },
+        ]);
+      }
     } else {
       setQuestions([]);
     }
@@ -178,7 +182,6 @@ export default function NavigatorScreen() {
             !pack ||
             !domainId ||
             packStatus?.source === 'none' ||
-            pack?.quality === 'baseline' ||
             !(pack?.domains && pack.domains.length > 0)
           }
         >
@@ -229,6 +232,16 @@ export default function NavigatorScreen() {
                   <Text style={styles.authorityText}>{c}</Text>
                 </TouchableOpacity>
               ))}
+              {((output.authoritiesByIssue[issue.issueId] || []).length === 0) && (
+                <View style={{ marginTop: 4 }}>
+                  <Text style={styles.error}>Authorities not populated for {state} yet</Text>
+                  {(pack?.gaps || [])
+                    .filter((g: any) => g.issueId === issue.issueId)
+                    .map((g: any, j: number) => (
+                      <Text key={j} style={styles.value}>- {g.message}</Text>
+                    ))}
+                </View>
+              )}
               {/* Legal Tests */}
               <Text style={styles.subLabel}>Legal Tests:</Text>
               {(output.testsByIssue[issue.issueId] || []).map((t, i) => (

@@ -9,16 +9,10 @@ const schemaVersion = '1';
 const packVersion = new Date().toISOString().slice(0,10).replace(/-/g, '.');
 const generatedAt = new Date().toISOString();
 
-const domains = [
-  'custody',
-  'child_support',
-  'dependency_tpr',
-  'domestic_violence',
-  'procedure',
-  'service_notice',
-  'venue_jurisdiction',
-  'appeals',
-];
+// import national shell definitions
+const shell = require('../data/nationalShell');
+
+const domains = shell.NATIONAL_DOMAINS; // array of {id,label,description}
 
 const states = [
   'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA',
@@ -37,13 +31,14 @@ for (const st of states) {
     state: st,
     packVersion,
     domains,
-    issues: {},
+    issues: shell.NATIONAL_ISSUES,
+    intakeQuestions: shell.NATIONAL_INTAKE,
+    tests: shell.NATIONAL_TESTS,
+    testItems: shell.NATIONAL_TESTS.map(t => ({ id: t.id, issueId: t.issueId, label: t.label })),
     authorities: {},
     issueAuthorities: [],
-    tests: [],
-    testItems: [],
     proceduralTraps: [],
-    gaps: [],
+    gaps: shell.NATIONAL_ISSUES.map(i => ({ domainId: i.domainId, issueId: i.id, message: 'Authorities not populated yet' })),
     metadata: { level: 'baseline', generatedAt }
   };
   const path = join(OUT_DIR, `${st}.json`);

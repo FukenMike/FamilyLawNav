@@ -134,6 +134,7 @@ function validateManifest(x: any): { ok: boolean; error?: string } {
 function validateStatePack(p: any): { ok: boolean; error?: string } {
   if (!p || typeof p !== 'object') return { ok: false, error: 'pack not object' };
   if (typeof p.schemaVersion !== 'string') return { ok: false, error: 'schemaVersion missing or not string' };
+  if (p.quality && typeof p.quality !== 'string') return { ok: false, error: 'quality invalid' };
   if (typeof p.state !== 'string') return { ok: false, error: 'state missing or not string' };
   if (typeof p.packVersion !== 'string') return { ok: false, error: 'packVersion missing or not string' };
   if (!Array.isArray(p.domains)) return { ok: false, error: 'domains not array' };
