@@ -41,3 +41,9 @@ app-example
 # generated native folders
 /ios
 /android
+
+# generated pack files
+public/packs/
+
+# TypeScript generator (compiled JS is used)
+scripts/generate-baseline-packs.ts
