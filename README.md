@@ -1,15 +1,14 @@
-
 # Family Law Navigator
 
-Family Law Navigator is a jurisdiction-aware legal issue navigator focused on family law.
+Family Law Navigator is a jurisdiction-aware legal issue navigator focused exclusively on family law.
 
-It helps users understand the controlling law in their case — statutes, court rules, case law, legal standards, required findings, burdens of proof, and procedural requirements — while also guiding them toward appropriate support resources when needed.
+It helps users understand the controlling law in their case — statutes, court rules, case law, legal standards, required findings, burdens of proof and evidentiary standards — while guiding them toward appropriate support pathways when needed.
 
-This project is designed to reduce procedural blind spots in family court and increase clarity around what the law actually requires.
+The system is designed to reduce procedural blind spots in family court and increase clarity around what the law actually requires.
 
 ## Scope: Family Law
 
-Current and planned domains include:
+Domains include:
 
 - Custody (initial determinations, modification, emergency)
 - Child support
@@ -21,7 +20,242 @@ Current and planned domains include:
 - Required judicial findings
 - Burdens of proof and evidentiary standards
 
-The system focuses specifically on family law processes and court structure.
+The Navigator focuses specifically on court process, legal standards, and authority structure within family law.
+
+## Core Flow
+
+Users select:
+
+- State
+- Family law domain
+- Structured intake questions
+
+The system provides:
+
+- Detected legal issues
+- Controlling statutes
+- Applicable court rules
+- Key case anchors
+- Legal standards and burdens
+- Required judicial findings
+- Procedural risk factors
+- Clear support pathways when appropriate
+
+**Flow:**
+
+state → domain → intake → issue detection → authority list → authority details → support pathways
+
+## Architecture
+
+### Unified National Schema
+
+All state packs conform to a single structured schema.
+
+Each pack includes:
+
+- schemaVersion
+- packVersion
+- state
+- domains
+- issues
+- authorities
+- legal tests
+- procedural risks
+- issue → authority mappings
+- gap tracking
+- quality metadata
+
+This allows consistent issue detection logic across jurisdictions.
+
+### State Pack System
+
+**Baseline Production Setup**
+
+- All 50 states + DC are scaffolded.
+- Baseline packs are committed to `public/packs/`.
+- A `manifest.json` tracks `packVersion` per state.
+- Packs are served statically from `/packs/*` in production.
+- No environment variables are required for default operation.
+
+**Pack Loading Strategy**
+
+Pack loading follows a deterministic, resilient order:
+
+1. Fresh cache
+2. Remote (if `EXPO_PUBLIC_PACKS_BASE_URL` is set)
+3. Stale cache fallback
+4. Seed fallback (if available)
+5. none (no pack available)
+
+The loader returns:
+
+```ts
+PackStatus {
+  state,
+  source: remote | cache | seed | none,
+  schemaVersion?,
+  packVersion?,
+  lastFetchedAt?,
+  lastTriedAt?,
+  error?,
+  isStale?,
+  cacheKey?
+}
+```
+
+**Cache Rules**
+
+- Pack TTL: 7 days
+- Manifest TTL: 6 hours
+- Cached payload includes:
+  - cachedAt
+  - state
+  - schemaVersion
+  - packVersion
+  - pack data
+- Staleness is determined by TTL or manifest version mismatch.
+- The UI never crashes on bad pack data; validation failures surface via status and fallback logic.
+
+**Pack Generator**
+
+Location:
+
+`scripts/generate-baseline-packs.js`
+
+Features:
+
+- Uses local New York date for `packVersion` (YYYY.MM.DD)
+- Prevents future-dated versions
+- Skips curated packs (`quality !== "baseline"`)
+- Prints summary (created / updated / skipped)
+- Automatically runs strict pack validation
+- Deterministic reruns
+
+To generate packs:
+
+```bash
+npm run gen:packs
+```
+
+**Pack Validation**
+
+Script: `scripts/check-packs.sh`
+
+Ensures:
+
+- `manifest.json` exists
+- `schemaVersion === "1"`
+- All state files exist when `REQUIRE_PACK_FILES=1`
+- Manifest shape is correct
+
+Run:
+
+```bash
+npm run check:packs
+REQUIRE_PACK_FILES=1 npm run check:packs
+```
+
+**Environment Safety**
+
+- Defaults to `/packs/manifest.json` and `/packs/{STATE}.json` when `EXPO_PUBLIC_PACKS_BASE_URL` is unset.
+- A guard script prevents accidental localhost references in environment files.
+
+Run:
+
+```bash
+npm run check:env
+```
+
+### Citation-Centric Authority Model
+
+Authorities are identified by citation, not URL.
+
+Each authority may include:
+
+- kind (statute, rule, case)
+- title
+- rank (binding, persuasive)
+- court scope
+- source references
+- verification status
+
+Citations are canonical identifiers.
+Sources provide transparency.
+
+## UI Structure
+
+### Navigator Tab
+
+Location:
+
+`app/(tabs)/navigator.tsx`
+
+Provides:
+
+- State selection
+- Pack status display
+- Refresh pack action
+- Structured intake
+- Issue detection
+- Legal test display
+- Procedural risk listing
+- Gap warnings
+- Authority mapping
+
+Run Navigator is disabled when no usable pack exists.
+
+### Authority Details Screen
+
+Location:
+
+`app/resource/[id].tsx`
+
+Displays:
+
+- Citation metadata
+- Authority type
+- Reverse linkage to issues
+- Safe fallback for unknown authorities
+
+## Routing Conventions (Do Not Break)
+
+- App shell: `app/(tabs)/_layout.tsx`
+- Canonical screens live in `app/(tabs)`
+- Do not create root-level `app/search.tsx` or `app/navigator.tsx`
+- Root `app/_layout.tsx` must render `<Slot />`
+- Root `app/index.tsx` redirects to `/search`
+
+To verify routing:
+
+```bash
+npm run check:routes
+```
+
+## Design Principles
+
+- Family-law-specific
+- Jurisdiction-aware
+- Transparent about data gaps
+- Citation-first authority identity
+- Versioned state packs
+- Deterministic loading
+- Production-safe defaults
+- Expandable to all 50 states
+- Designed for legal aid integration
+
+## Vision
+
+To give families clarity in complex legal processes.
+
+To ensure users understand:
+
+- What must be proven
+- What standards apply
+- What findings courts must enter
+- What procedural risks exist
+- What support pathways are available
+
+Before critical decisions are made.
 
 ## Core Flow
 
