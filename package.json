@@ -10,7 +10,8 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "check:routes": "bash scripts/check-routes.sh",
-    "check:packs": "bash scripts/check-packs.sh"
+    "check:packs": "bash scripts/check-packs.sh",
+    "gen:packs": "node scripts/generate-baseline-packs.js"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
