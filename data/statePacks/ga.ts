@@ -1,3 +1,4 @@
+import type { StatePack } from "@/services/packStore";
 import { Domain, Issue, LegalTest, TestItem, ProceduralTrap } from "@/core/navigator/types";
 
 export const state = "GA";
@@ -92,7 +93,7 @@ export const authorities: Record<string, {
   },
 };
 
-export const gaPack = {
+export const gaPack: StatePack = {
   state,
   schemaVersion: "1",
   packVersion: 'seed-ga-2026-02-20',
@@ -110,4 +111,3 @@ export const gaPack = {
   traps,
 };
 
-export type StatePack = typeof gaPack;

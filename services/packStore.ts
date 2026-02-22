@@ -145,17 +145,48 @@ function validateManifest(x: any): { ok: boolean; error?: string } {
 
 function validateStatePack(p: any): { ok: boolean; error?: string } {
   if (!p || typeof p !== 'object') return { ok: false, error: 'pack not object' };
+
   if (typeof p.schemaVersion !== 'string') return { ok: false, error: 'schemaVersion missing or not string' };
   if (p.quality && typeof p.quality !== 'string') return { ok: false, error: 'quality invalid' };
+
   if (typeof p.state !== 'string') return { ok: false, error: 'state missing or not string' };
   if (typeof p.packVersion !== 'string') return { ok: false, error: 'packVersion missing or not string' };
+
+  // Required: jurisdictions_sources (urls/ids that power citations + refresh)
+  if (!p.jurisdictions_sources || typeof p.jurisdictions_sources !== 'object') {
+    return { ok: false, error: 'jurisdictions_sources missing or not object' };
+  }
+  if (typeof p.jurisdictions_sources.code !== 'string') return { ok: false, error: 'jurisdictions_sources.code missing or not string' };
+  if (typeof p.jurisdictions_sources.rules !== 'string') return { ok: false, error: 'jurisdictions_sources.rules missing or not string' };
+  if (typeof p.jurisdictions_sources.opinions !== 'string') return { ok: false, error: 'jurisdictions_sources.opinions missing or not string' };
+  if (p.jurisdictions_sources.forms != null && typeof p.jurisdictions_sources.forms !== 'string') {
+    return { ok: false, error: 'jurisdictions_sources.forms invalid' };
+  }
+
   if (!Array.isArray(p.domains)) return { ok: false, error: 'domains not array' };
   if (!Array.isArray(p.issues)) return { ok: false, error: 'issues not array' };
+
+  if (!p.authoritiesByIssue || typeof p.authoritiesByIssue !== 'object') {
+    return { ok: false, error: 'authoritiesByIssue missing or not object' };
+  }
   if (!p.authorities || typeof p.authorities !== 'object') return { ok: false, error: 'authorities missing or not object' };
+
+  // Require empty arrays rather than undefined: makes rendering logic consistent across states
+  if (!Array.isArray(p.legalTests)) return { ok: false, error: 'legalTests not array' };
+  if (!Array.isArray(p.testItems)) return { ok: false, error: 'testItems not array' };
+  if (!Array.isArray(p.traps)) return { ok: false, error: 'traps not array' };
+
   return { ok: true };
 }
 
 // Read manifest from remote, but return cached manifest if remote unavailable.  Maintain TTL.
+
+function normalizePack(state: string, pack: any) {
+  if (!pack || typeof pack !== "object") return pack;
+  if (pack.state == null) pack.state = state;
+  return pack;
+}
+
 export async function getManifest(opts?: { force?: boolean }): Promise<{ manifest: Manifest | null; status: PackStatus }> {
   const status: PackStatus = { state: 'manifest', source: 'none', lastTriedAt: new Date().toISOString() };
   // fetch cached wrapper {manifest,cachedAt}
@@ -212,6 +243,7 @@ export async function getCachedPack(state: string): Promise<{ pack: StatePack | 
   for (const k of keys) {
     const payload = await getLocal(k) as CachedPackPayload | null;
     if (payload && payload.pack) {
+      payload.pack = normalizePack(state, payload.pack);
       const v = validateStatePack(payload.pack);
       if (!v.ok) {
         debug('cached pack validation failed', state, v.error);
@@ -277,6 +309,7 @@ export async function getPack(state: string, opts?: { forceRemote?: boolean }): 
       const resp = await fetch(url);
       if (!resp.ok) throw new Error(`Remote fetch failed: ${resp.status}`);
       let pack = await resp.json();
+      normalizePack(state, pack);
       const v = validateStatePack(pack);
       if (!v.ok) throw new Error(v.error || 'Remote pack failed validation');
       // adapt to canonical v1 shape before caching/returning
@@ -325,6 +358,7 @@ export async function getPack(state: string, opts?: { forceRemote?: boolean }): 
     const seedProv = new SeedAuthorityPackProvider();
     const seedPack = await seedProv.getStatePack(state);
     if (seedPack) {
+      normalizePack(state, seedPack);
       const v2 = validateStatePack(seedPack);
       if (!v2.ok) {
         debug('seed pack validation failed', state, v2.error);

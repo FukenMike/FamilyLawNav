@@ -1,4 +1,4 @@
-import type { StatePack } from './ga';
+import type { StatePack } from '@/services/packStore';
 
 import { akPack } from './ak';
 import { alPack } from './al';
