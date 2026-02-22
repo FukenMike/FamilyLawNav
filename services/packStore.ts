@@ -145,13 +145,37 @@ function validateManifest(x: any): { ok: boolean; error?: string } {
 
 function validateStatePack(p: any): { ok: boolean; error?: string } {
   if (!p || typeof p !== 'object') return { ok: false, error: 'pack not object' };
+
   if (typeof p.schemaVersion !== 'string') return { ok: false, error: 'schemaVersion missing or not string' };
   if (p.quality && typeof p.quality !== 'string') return { ok: false, error: 'quality invalid' };
+
   if (typeof p.state !== 'string') return { ok: false, error: 'state missing or not string' };
   if (typeof p.packVersion !== 'string') return { ok: false, error: 'packVersion missing or not string' };
+
+  // Required: jurisdictions_sources (urls/ids that power citations + refresh)
+  if (!p.jurisdictions_sources || typeof p.jurisdictions_sources !== 'object') {
+    return { ok: false, error: 'jurisdictions_sources missing or not object' };
+  }
+  if (typeof p.jurisdictions_sources.code !== 'string') return { ok: false, error: 'jurisdictions_sources.code missing or not string' };
+  if (typeof p.jurisdictions_sources.rules !== 'string') return { ok: false, error: 'jurisdictions_sources.rules missing or not string' };
+  if (typeof p.jurisdictions_sources.opinions !== 'string') return { ok: false, error: 'jurisdictions_sources.opinions missing or not string' };
+  if (p.jurisdictions_sources.forms != null && typeof p.jurisdictions_sources.forms !== 'string') {
+    return { ok: false, error: 'jurisdictions_sources.forms invalid' };
+  }
+
   if (!Array.isArray(p.domains)) return { ok: false, error: 'domains not array' };
   if (!Array.isArray(p.issues)) return { ok: false, error: 'issues not array' };
+
+  if (!p.authoritiesByIssue || typeof p.authoritiesByIssue !== 'object') {
+    return { ok: false, error: 'authoritiesByIssue missing or not object' };
+  }
   if (!p.authorities || typeof p.authorities !== 'object') return { ok: false, error: 'authorities missing or not object' };
+
+  // Require empty arrays rather than undefined: makes rendering logic consistent across states
+  if (!Array.isArray(p.legalTests)) return { ok: false, error: 'legalTests not array' };
+  if (!Array.isArray(p.testItems)) return { ok: false, error: 'testItems not array' };
+  if (!Array.isArray(p.traps)) return { ok: false, error: 'traps not array' };
+
   return { ok: true };
 }
 
