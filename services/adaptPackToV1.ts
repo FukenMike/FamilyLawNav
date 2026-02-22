@@ -21,7 +21,7 @@ export function adaptPackToV1(input: any): StatePackV1 {
       state: String(input.state || ''),
       schemaVersion: '1',
       packVersion: String(input.packVersion || input.pack_version || ''),
-      jurisdiction_sources: input.jurisdiction_sources || makeDefaultJurisdictions(),
+      jurisdiction_sources: input.jurisdiction_sources || input.jurisdictions_sources || makeDefaultJurisdictions(),
       domains: input.domains.map((d: any) => ({
         id: String(d.id || ''),
         label: String(d.label || ''),
