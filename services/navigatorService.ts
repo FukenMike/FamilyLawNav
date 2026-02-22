@@ -1,4 +1,4 @@
-import { getAuthorityPackProvider } from "@/config/runtime";
+import { getPack } from "@/services/packStore";
 import type { NavigatorOutput, IntakeAnswer, DetectedIssue } from "@/core/navigator/types";
 import type { StatePack } from "@/services/packStore";
 
@@ -9,8 +9,7 @@ interface RunNavigatorParams {
 }
 
 export async function runNavigator({ state, domainId, answers }: RunNavigatorParams): Promise<NavigatorOutput> {
-  const authorityPackProvider = getAuthorityPackProvider();
-  const pack: StatePack | null = await authorityPackProvider.getStatePack(state);
+  const { pack, status } = await getPack(state);
   if (!pack) {
     return {
       state,
@@ -26,14 +25,19 @@ export async function runNavigator({ state, domainId, answers }: RunNavigatorPar
     };
   }
 
+  // collect issues from domains
+  const allIssues =
+    Array.isArray(pack.domains)
+      ? pack.domains.flatMap((d: any) => Array.isArray(d.issues) ? d.issues : [])
+      : [];
+
   // Pack-driven detection: if pack provides questions/rules, use them; otherwise, fallback to simple logic
   let detectedIssues: DetectedIssue[] = [];
-  if (pack && pack.issues && pack.issues.length > 0) {
-    // Example: flag first issue if any boolean answer is true (baseline logic)
+  if (allIssues.length > 0) {
     const boolAnswers = answers.filter(a => typeof a.value === "boolean" && a.value === true);
     if (boolAnswers.length > 0) {
       detectedIssues.push({
-        issueId: pack.issues[0].id,
+        issueId: allIssues[0].id,
         confidence: 1,
         reasons: ["Positive boolean answer detected (baseline logic)"]
       });
@@ -45,9 +49,11 @@ export async function runNavigator({ state, domainId, answers }: RunNavigatorPar
   const testsByIssue: Record<string, any[]> = {};
   const trapsByIssue: Record<string, any[]> = {};
   for (const issue of detectedIssues) {
-    authoritiesByIssue[issue.issueId] = pack.authoritiesByIssue[issue.issueId] || [];
-    testsByIssue[issue.issueId] = pack.legalTests.filter((t: any) => t.issueId === issue.issueId);
-    trapsByIssue[issue.issueId] = pack.traps.filter((t: any) => t.issueId === issue.issueId);
+    // find issue object to read details
+    const issueObj = allIssues.find((i: any) => i.id === issue.issueId) || {};
+    authoritiesByIssue[issue.issueId] = Array.isArray(issueObj.authorities) ? issueObj.authorities : [];
+    testsByIssue[issue.issueId] = Array.isArray(issueObj.legal_tests) ? issueObj.legal_tests : [];
+    trapsByIssue[issue.issueId] = Array.isArray(issueObj.procedural_traps) ? issueObj.procedural_traps : [];
   }
 
   return {

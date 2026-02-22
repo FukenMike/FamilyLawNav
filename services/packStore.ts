@@ -2,7 +2,7 @@
 // Handles fetching, caching, cache-metadata and resilience for manifest + state packs
 
 import { Platform } from 'react-native';
-import { normalizePack } from './normalizePack';
+import { adaptPackToV1 } from './adaptPackToV1';
 
 // base url for packs; may be blank in production (use relative)
 const rawBase = process.env.EXPO_PUBLIC_PACKS_BASE_URL || '';
@@ -279,8 +279,8 @@ export async function getPack(state: string, opts?: { forceRemote?: boolean }): 
       let pack = await resp.json();
       const v = validateStatePack(pack);
       if (!v.ok) throw new Error(v.error || 'Remote pack failed validation');
-      // normalize before caching/returning
-      pack = normalizePack(pack);
+      // adapt to canonical v1 shape before caching/returning
+      pack = adaptPackToV1(pack);
       const schemaVersion = String(pack.schemaVersion);
       const packVersion = String(pack.packVersion || manifestPackVersion || 'remote');
       const payload: CachedPackPayload = { cachedAt: new Date().toISOString(), state, schemaVersion, packVersion, pack };
@@ -298,9 +298,9 @@ export async function getPack(state: string, opts?: { forceRemote?: boolean }): 
   // start with cache
   const cached = await getCachedPack(state);
   if (cached.pack) {
-    // always normalize any cached pack before handing it back; this ensures
-    // later code can rely on a consistent schema regardless of origin.
-    cached.pack = normalizePack(cached.pack);
+    // always adapt any cached pack before handing it back; this ensures
+    // later code can rely on the canonical v1 schema regardless of origin.
+    cached.pack = adaptPackToV1(cached.pack);
 
     const isFreshCache = !cached.status.isStale && cached.status.packVersion === manifestPackVersion;
     if (isFreshCache) {
@@ -329,16 +329,16 @@ export async function getPack(state: string, opts?: { forceRemote?: boolean }): 
       if (!v2.ok) {
         debug('seed pack validation failed', state, v2.error);
       } else {
-        // normalize before caching/returning so every codepath sees the same
-        const normalized = normalizePack(seedPack);
-        const schemaVersion = String(normalized.schemaVersion || 'unknown');
-        const packVersion = String(normalized.packVersion || 'seed');
-        const payload: CachedPackPayload = { cachedAt: new Date().toISOString(), state, schemaVersion, packVersion, pack: normalized };
+        // adapt before caching/returning so every codepath sees canonical schema
+        const adapted = adaptPackToV1(seedPack);
+        const schemaVersion = String(adapted.schemaVersion || 'unknown');
+        const packVersion = String(adapted.packVersion || 'seed');
+        const payload: CachedPackPayload = { cachedAt: new Date().toISOString(), state, schemaVersion, packVersion, pack: adapted };
         const key = packCacheKey(state, schemaVersion, packVersion);
         await setLocal(key, payload);
         const status: PackStatus = { ...statusBase, source: 'seed', packVersion, schemaVersion, lastFetchedAt: payload.cachedAt, cacheKey: key };
         debug('seed fallback', status);
-        return { pack: normalized, status };
+        return { pack: adapted, status };
       }
     }
   } catch (e) {

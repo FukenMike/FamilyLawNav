@@ -66,7 +66,7 @@ export default function NavigatorScreen() {
       const packRes = await getPack(state);
       setPack(packRes.pack);
       setPackStatus(packRes.status);
-      if (packRes.pack && packRes.pack.domains && packRes.pack.domains.length > 0) {
+      if (packRes.pack && Array.isArray(packRes.pack.domains) && packRes.pack.domains.length > 0) {
         setDomainId(packRes.pack.domains[0].id);
       }
     })();
@@ -215,14 +215,24 @@ export default function NavigatorScreen() {
         <View style={styles.section}>
           <Text style={styles.label}>Detected Issues:</Text>
           {output.detectedIssues.length === 0 && <Text style={styles.value}>None detected.</Text>}
-          {output.detectedIssues.map(issue => (
-            <View key={issue.issueId} style={styles.issueBlock}>
-              <Text style={styles.issueTitle}>{issue.issueId}</Text>
-              <Text style={styles.value}>Confidence: {issue.confidence}</Text>
-              <Text style={styles.value}>Reasons: {issue.reasons.join(", ")}</Text>
-              {/* Authorities */}
-              <Text style={styles.subLabel}>Authorities:</Text>
-              {(output.authoritiesByIssue[issue.issueId] || []).map((c, i) => (
+          {output.detectedIssues.map(issue => {
+            // find issue metadata in pack
+            const issueMeta = pack
+              ? pack.domains
+                  .flatMap((d: any) => Array.isArray(d.issues) ? d.issues : [])
+                  .find((i: any) => i.id === issue.issueId)
+              : null;
+            return (
+              <View key={issue.issueId} style={styles.issueBlock}>
+                <Text style={styles.issueTitle}>{issue.issueId}</Text>
+                {issueMeta?.needs_verification && (
+                  <Text style={[styles.value, { color: '#b00' }]}>Needs verification</Text>
+                )}
+                <Text style={styles.value}>Confidence: {issue.confidence}</Text>
+                <Text style={styles.value}>Reasons: {issue.reasons.join(", ")}</Text>
+                {/* Authorities */}
+                <Text style={styles.subLabel}>Authorities:</Text>
+                {(output.authoritiesByIssue[issue.issueId] || []).map((c, i) => (
                 <TouchableOpacity
                   key={i}
                   style={styles.authorityRow}
@@ -253,7 +263,8 @@ export default function NavigatorScreen() {
                 <Text key={i} style={styles.value}>{t.label} ({t.severity})</Text>
               ))}
             </View>
-          ))}
+          );
+        })}
         </View>
       )}
     </ScrollView>
