@@ -3,6 +3,7 @@
 
 import { Platform } from 'react-native';
 import { adaptPackToV1 } from './adaptPackToV1';
+import { statePacks } from "@/data/statePacks";
 
 // base url for packs; may be blank in production (use relative)
 const rawBase = process.env.EXPO_PUBLIC_PACKS_BASE_URL || '';
@@ -354,9 +355,7 @@ export async function getPack(state: string, opts?: { forceRemote?: boolean }): 
 
   // fallback to seed
   try {
-    const { SeedAuthorityPackProvider } = require('@/providers/SeedAuthorityPackProvider');
-    const seedProv = new SeedAuthorityPackProvider();
-    const seedPack = await seedProv.getStatePack(state);
+    const seedPack = statePacks[state as keyof typeof statePacks] as any;
     if (seedPack) {
       normalizePack(state, seedPack);
       const v2 = validateStatePack(seedPack);
