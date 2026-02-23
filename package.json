@@ -12,7 +12,8 @@
     "check:routes": "bash scripts/check-routes.sh",
     "check:packs": "bash scripts/check-packs.sh",
     "check:env": "bash scripts/check-env.sh",
-    "gen:packs": "node scripts/generate-baseline-packs.js"
+    "gen:packs": "node scripts/generate-baseline-packs.js",
+    "audit:arch": "node scripts/audit-architecture.mjs"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
