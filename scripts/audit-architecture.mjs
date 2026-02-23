@@ -324,7 +324,7 @@ const savedCalls = search(/\bsave\s*\(|\bunsave\s*\(|\btoggleSaved\s*\(/);
 makeCallGraph('Saved flow', savedCalls);
 
 // 6) AI summary
-const aiCalls = search(/aiService|openai/);
+const aiCalls = search(/aiService|openai|summarizeAuthority/);
 makeCallGraph('AI summary', aiCalls);
 
 // 7) crawler
@@ -521,7 +521,7 @@ const features = [
   {name:'Search UI',pattern:'searchProvider',file:'services/searchProvider.ts'},
   {name:'Resource details',pattern:'decodeAuthorityId',file:'app/resource/[id].tsx'},
   {name:'Saved items',pattern:/\bsave\s*\(|\bunsave\s*\(|\btoggleSaved\s*\(/,file:'services/savedStore.ts'},
-  {name:'AI summaries',pattern:/aiService|openai/,file:'services/aiService.ts'}
+  {name:'AI summaries',pattern:/aiService|openai|summarizeAuthority/,file:'services/aiService.ts'}
 ];
 
 out += '| Feature | Implemented? | Evidence | Notes |\n';

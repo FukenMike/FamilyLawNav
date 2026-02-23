@@ -1,12 +1,33 @@
-// AsyncStorage types sometimes missing in JS-only deps
-// @ts-ignore
-import AsyncStorage from '@react-native-async-storage/async-storage';
+// We'll lazily require AsyncStorage because web bundler can't resolve
+// the native-only package.  For web, fall back to window.localStorage.
 
 const STORAGE_KEY = 'savedAuthorities';
 
+async function getStorage() {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    return {
+      getItem: async (k: string) => window.localStorage.getItem(k),
+      setItem: async (k: string, v: string) => window.localStorage.setItem(k, v),
+    } as any;
+  }
+  try {
+    // dynamic import so bundler doesn't try to resolve on web
+    // @ts-ignore // module may not exist in web environment
+    const m = await import('@react-native-async-storage/async-storage');
+    return m.default || m;
+  } catch (e) {
+    console.warn('AsyncStorage import failed', e);
+    return {
+      getItem: async () => null,
+      setItem: async () => {},
+    } as any;
+  }
+}
+
 async function readAll(): Promise<string[]> {
   try {
-    const raw = await AsyncStorage.getItem(STORAGE_KEY);
+    const storage: any = await getStorage();
+    const raw = await storage.getItem(STORAGE_KEY);
     if (!raw) return [];
     return JSON.parse(raw) as string[];
   } catch (e) {
@@ -17,7 +38,8 @@ async function readAll(): Promise<string[]> {
 
 async function writeAll(ids: string[]): Promise<void> {
   try {
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
+    const storage: any = await getStorage();
+    await storage.setItem(STORAGE_KEY, JSON.stringify(ids));
   } catch (e) {
     console.warn('savedStore write failed', e);
   }

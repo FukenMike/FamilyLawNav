@@ -57,9 +57,9 @@
 - navigation uses: 
 
 ### Screen: app/resource/[id].tsx
-- imports: @/services/authorityIdHelpers, @/services/packStore, @/services/savedStore, expo-router, react, react-native
+- imports: @/services/aiService, @/services/authorityIdHelpers, @/services/packStore, @/services/savedStore, expo-router, react, react-native
 - hooks: useState, useEffect, usePack
-- call-like invocations: ResourceRoute, async, catch, create, decodeAuthorityId, entries, for, if, includes, isSaved, map, open, push, return, setAuthority, setDecodedCitation, setError, setLoading, setReferencedBy, setSaved, then, toggleSaved, useEffect, usePack, useState
+- call-like invocations: ResourceRoute, async, catch, create, decodeAuthorityId, entries, for, if, includes, isSaved, map, open, push, return, setAuthority, setDecodedCitation, setError, setLoading, setReferencedBy, setSaved, setSummarizing, setSummary, setSummaryError, summarizeAuthority, then, toggleSaved, useEffect, usePack, useState
 - store hooks: 
 - navigation uses: 
 
@@ -103,17 +103,20 @@
 
 ### Resource details usage
 - /home/michael/Desktop/FamilyLawNav/app/resource/[id].tsx:5 -> import { decodeAuthorityId } from '@/services/authorityIdHelpers'
-- /home/michael/Desktop/FamilyLawNav/app/resource/[id].tsx:28 -> const citation = decodeAuthorityId(id);
+- /home/michael/Desktop/FamilyLawNav/app/resource/[id].tsx:32 -> const citation = decodeAuthorityId(id);
 - /home/michael/Desktop/FamilyLawNav/services/authorityIdHelpers.ts:5 -> export function decodeAuthorityId(id: string): string {
 
 ### Saved flow
-- /home/michael/Desktop/FamilyLawNav/app/resource/[id].tsx:81 -> const newState = await toggleSaved(id);
-- /home/michael/Desktop/FamilyLawNav/services/savedStore.ts:35 -> export async function save(id: string): Promise<void> {
-- /home/michael/Desktop/FamilyLawNav/services/savedStore.ts:43 -> export async function unsave(id: string): Promise<void> {
-- /home/michael/Desktop/FamilyLawNav/services/savedStore.ts:55 -> await unsave(id);
-- /home/michael/Desktop/FamilyLawNav/services/savedStore.ts:58 -> await save(id);
+- /home/michael/Desktop/FamilyLawNav/app/resource/[id].tsx:85 -> const newState = await toggleSaved(id);
+- /home/michael/Desktop/FamilyLawNav/services/savedStore.ts:57 -> export async function save(id: string): Promise<void> {
+- /home/michael/Desktop/FamilyLawNav/services/savedStore.ts:65 -> export async function unsave(id: string): Promise<void> {
+- /home/michael/Desktop/FamilyLawNav/services/savedStore.ts:77 -> await unsave(id);
+- /home/michael/Desktop/FamilyLawNav/services/savedStore.ts:80 -> await save(id);
 
 ### AI summary
+- /home/michael/Desktop/FamilyLawNav/app/resource/[id].tsx:8 -> import { summarizeAuthority } from '@/services/aiService'
+- /home/michael/Desktop/FamilyLawNav/app/resource/[id].tsx:119 -> const res = await summarizeAuthority(text || '');
+- /home/michael/Desktop/FamilyLawNav/services/aiService.ts:3 -> export async function summarizeAuthority(authorityText: string): Promise<string> {
 
 ### Crawler/ingest
 
@@ -127,11 +130,12 @@
 ## Duplicate Imports
 
 ## Reachability Map
-- total files scanned: 78
-- total reachable files: 68
-- reachable service files (7):
+- total files scanned: 79
+- total reachable files: 69
+- reachable service files (8):
   - services/SeedSearchProvider.ts
   - services/adaptPackToV1.ts
+  - services/aiService.ts
   - services/authorityIdHelpers.ts
   - services/navigatorService.ts
   - services/packStore.ts
@@ -156,9 +160,9 @@
 | Validation | Implemented | services/packStore.ts:151; services/packStore.ts:168; services/packStore.ts:264 | |
 | Navigator engine | Implemented | app/(tabs)/navigator.tsx:86 | |
 | Search UI | Implemented | app/(tabs)/search.tsx:20; services/searchProvider.ts:6; app/(tabs)/search.tsx:24 | |
-| Resource details | Implemented | app/resource/[id].tsx:28; services/authorityIdHelpers.ts:5 | |
-| Saved items | Implemented | services/savedStore.ts:43; services/savedStore.ts:55 | |
-| AI summaries | No evidence |  | |
+| Resource details | Implemented | app/resource/[id].tsx:32; services/authorityIdHelpers.ts:5 | |
+| Saved items | Implemented | services/savedStore.ts:65; services/savedStore.ts:77 | |
+| AI summaries | Implemented | app/resource/[id].tsx:8; app/resource/[id].tsx:119; services/aiService.ts:3 | |
 
 ## D. Redundancy + Conflict Report
 

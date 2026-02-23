@@ -5,6 +5,7 @@ import { useLocalSearchParams } from 'expo-router'
 import { decodeAuthorityId } from '@/services/authorityIdHelpers'
 import { usePack } from '@/services/packStore'
 import { isSaved, toggle as toggleSaved } from '@/services/savedStore'
+import { summarizeAuthority } from '@/services/aiService'
 
 export default function ResourceRoute() {
   const { id, state } = useLocalSearchParams<{ id: string, state?: string }>();
@@ -14,6 +15,9 @@ export default function ResourceRoute() {
   const [referencedBy, setReferencedBy] = useState<string[]>([]);
   const [decodedCitation, setDecodedCitation] = useState<string>("");
   const [saved, setSaved] = useState<boolean>(false);
+  const [summary, setSummary] = useState<string | null>(null);
+  const [summarizing, setSummarizing] = useState(false);
+  const [summaryError, setSummaryError] = useState<string | null>(null);
   const stateCode = typeof state === 'string' ? state : '';
   const { pack, status: packStatus } = usePack(stateCode);
 
@@ -104,6 +108,35 @@ export default function ResourceRoute() {
             ))}
           </View>
         )}
+        {/* AI summary */}
+        <TouchableOpacity
+          style={[styles.runBtn, { marginTop: 16 }]}
+          onPress={async () => {
+            setSummarizing(true);
+            setSummaryError(null);
+            try {
+              const text = authority.description || authority.text || authority.title || decodedCitation;
+              const res = await summarizeAuthority(text || '');
+              setSummary(res);
+            } catch (e: any) {
+              setSummaryError(e.message || 'Failed');
+            } finally {
+              setSummarizing(false);
+            }
+          }}
+          disabled={summarizing}
+        >
+          <Text style={styles.runBtnText}>{summarizing ? 'Summarizing...' : 'Generate Summary'}</Text>
+        </TouchableOpacity>
+        {summary && (
+          <View style={{ marginTop: 12 }}>
+            <Text style={styles.section}>Summary</Text>
+            <Text style={styles.value}>{summary}</Text>
+          </View>
+        )}
+        {summaryError && (
+          <Text style={[styles.error, { marginTop: 8 }]}>{summaryError}</Text>
+        )}
       </View>
     </ScrollView>
   );
@@ -158,6 +191,18 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   saveBtnTextActive: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+  runBtn: {
+    backgroundColor: '#1976d2',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  runBtnText: {
     color: '#fff',
     fontWeight: '600',
   },
