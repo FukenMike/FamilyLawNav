@@ -233,7 +233,7 @@ function normalizePack(state: string, pack: any) {
   return pack
 }
 
-export async function getManifest(opts?: {
+async function getManifest(opts?: {
   force?: boolean
 }): Promise<{ manifest: Manifest | null; status: PackStatus }> {
   const status: PackStatus = {
@@ -310,6 +310,8 @@ export async function getCachedPack(
     const payload = (await getLocal(k)) as CachedPackPayload | null
     if (payload && payload.pack) {
       payload.pack = normalizePack(state, payload.pack)
+      // always adapt cached packs before validating; avoids ordering issue
+      payload.pack = adaptPackToV1(payload.pack)
       const v = validateStatePack(payload.pack)
       if (!v.ok) {
         debug('cached pack validation failed', state, v.error)
@@ -334,6 +336,7 @@ export async function getCachedPack(
   }
   return { pack: null, status: statusBase }
 }
+
 
 export async function clearCachedPack(state: string): Promise<void> {
   // Remove any cached entries for this state (web localStorage scan + known keys)
@@ -385,10 +388,10 @@ export async function getPack(
       if (!resp.ok) throw new Error(`Remote fetch failed: ${resp.status}`)
       let pack = await resp.json()
       normalizePack(state, pack)
-      const v = validateStatePack(pack)
-      if (!v.ok) throw new Error(v.error || 'Remote pack failed validation')
       // adapt to canonical v1 shape before caching/returning
       pack = adaptPackToV1(pack)
+      const v = validateStatePack(pack)
+      if (!v.ok) throw new Error(v.error || 'Remote pack failed validation')
       const schemaVersion = String(pack.schemaVersion)
       const packVersion = String(
         pack.packVersion || manifestPackVersion || 'remote',
@@ -456,12 +459,12 @@ export async function getPack(
     const seedPack = statePacks[state as keyof typeof statePacks] as any
     if (seedPack) {
       normalizePack(state, seedPack)
-      const v2 = validateStatePack(seedPack)
+      // adapt before validation and caching so we always work with v1
+      const adapted = adaptPackToV1(seedPack)
+      const v2 = validateStatePack(adapted)
       if (!v2.ok) {
         debug('seed pack validation failed', state, v2.error)
       } else {
-        // adapt before caching/returning so every codepath sees canonical schema
-        const adapted = adaptPackToV1(seedPack)
         const schemaVersion = String(adapted.schemaVersion || 'unknown')
         const packVersion = String(adapted.packVersion || 'seed')
         const payload: CachedPackPayload = {
@@ -490,6 +493,31 @@ export async function getPack(
   }
 
   return { pack: null, status: { ...statusBase, source: 'none' } }
+}
+
+// React helper hook that wraps getPack for use in components.  It keeps
+// pack/status state and exposes a refresh method.
+import { useState, useEffect, useCallback } from "react";
+
+export function usePack(state: string) {
+  const [pack, setPack] = useState<StatePack | null>(null);
+  const [status, setStatus] = useState<PackStatus>({ state, source: 'none', lastTriedAt: new Date().toISOString() });
+
+  const load = useCallback(async (forceRemote = false) => {
+    const res = await getPack(state, { forceRemote });
+    setPack(res.pack);
+    setStatus(res.status);
+    return res;
+  }, [state]);
+
+  useEffect(() => {
+    // reset when state changes
+    setPack(null);
+    setStatus({ state, source: 'none', lastTriedAt: new Date().toISOString() });
+    load(false);
+  }, [state, load]);
+
+  return { pack, status, refresh: (force: boolean = false) => load(force) };
 }
 
 // Backward-compatible helpers (legacy API)

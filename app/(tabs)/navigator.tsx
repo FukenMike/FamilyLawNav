@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, ScrollView, Switch } from "react-native";
 
-import { runNavigator } from "@/services/navigatorService";
-import { getManifest, getPack, PACK_CACHE_TTL_MS } from "@/services/packStore";
-import type { PackStatus } from "@/services/packStore";
+import { runNavigatorWithPack } from "@/services/navigatorService";
+import { usePack, type PackStatus } from "@/services/packStore";
 import type { Domain, IntakeQuestion, IntakeAnswer, NavigatorOutput } from "@/core/navigator/types";
 import { encodeAuthorityId } from "@/services/authorityIdHelpers";
 import { useRouter } from "expo-router";
@@ -20,9 +19,8 @@ export default function NavigatorScreen() {
     }
     return 'GA';
   });
-  const [manifest, setManifest] = useState<any>(null);
-  const [pack, setPack] = useState<any>(null);
-  const [packStatus, setPackStatus] = useState<PackStatus | null>(null);
+  // manifest is no longer needed; packStore handles manifest internally
+  const { pack, status: packStatus, refresh } = usePack(state);
   const [refreshBusy, setRefreshBusy] = useState(false);
   const [domainId, setDomainId] = useState<string>("");
   const [questions, setQuestions] = useState<IntakeQuestion[]>([]);
@@ -48,28 +46,11 @@ export default function NavigatorScreen() {
     return new Date(iso).toLocaleDateString();
   }
 
-  // Load manifest and pack on state change
+  // record last state in localStorage; pack/state loading happens via hook
   useEffect(() => {
-    (async () => {
-      setPack(null);
-      setPackStatus(null);
-      setDomainId("");
-      setQuestions([]);
-      setAnswers({});
-      setOutput(null);
-      setGap(null);
-      if (typeof window !== 'undefined' && window.localStorage) {
-        window.localStorage.setItem('lastState', state);
-      }
-      const mRes = await getManifest();
-      setManifest(mRes.manifest);
-      const packRes = await getPack(state);
-      setPack(packRes.pack);
-      setPackStatus(packRes.status);
-      if (packRes.pack && Array.isArray(packRes.pack.domains) && packRes.pack.domains.length > 0) {
-        setDomainId(packRes.pack.domains[0].id);
-      }
-    })();
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.setItem('lastState', state);
+    }
   }, [state]);
 
   // Update questions when domain or pack changes
@@ -102,7 +83,7 @@ export default function NavigatorScreen() {
       value: answers[q.id] ?? false,
     }));
     try {
-      const result = await runNavigator({ state, domainId, answers: intakeAnswers });
+      const result = await runNavigatorWithPack({ pack, domainId, answers: intakeAnswers });
       setOutput(result);
       if (result.gaps && result.gaps.length > 0) setGap(result.gaps.join("\n"));
     } catch (e: any) {
@@ -194,12 +175,7 @@ export default function NavigatorScreen() {
             setRefreshBusy(true);
             try {
               setGap(null);
-              const res = await getPack(state, { forceRemote: true });
-              // only replace pack if remote returned one; always update status
-              if (res.pack) setPack(res.pack);
-              setPackStatus(res.status);
-            } catch (e: any) {
-              setPackStatus(prev => ({ ...(prev || {}), error: e?.message || String(e) } as PackStatus));
+              await refresh(true);
             } finally {
               setRefreshBusy(false);
             }

@@ -9,10 +9,12 @@ function walk(dir, filelist = []) {
     const fp = path.join(dir, f);
     const stat = fs.statSync(fp);
     if (stat.isDirectory()) {
-      // skip node_modules and .git and docs maybe
+      // skip node_modules, .git, docs, audit script
       if (f === 'node_modules' || f === '.git' || f === 'docs') continue;
       walk(fp, filelist);
     } else if (/\.(js|mjs|ts|tsx)$/.test(f)) {
+      // exclude the audit script itself
+      if (fp.endsWith('scripts' + path.sep + 'audit-architecture.mjs')) continue;
       filelist.push(fp);
     }
   }
@@ -30,27 +32,84 @@ for (const f of files) {
   }
 }
 
-// build import graph (relative imports, also require)
+// build import graph (relative imports, also require and export-from edges)
 const importGraph = {};
+
+// helper for resolving a module specifier to a filesystem path if possible
+function resolveModule(spec, basedir) {
+  // spec: './foo', '../bar', '@/something' or others
+  const extensions = ['.ts','.tsx','.js','.mjs','.cjs',
+                      '.native.ts','.native.tsx','.native.js','.native.jsx',
+                      '.ios.ts','.ios.tsx','.android.ts','.android.tsx'];
+  const indexNames = extensions.map(e=>'index'+e);
+
+  const tryFile = rel => {
+    const abs = path.resolve(basedir, rel);
+    if (fs.existsSync(abs)) return abs;
+    return null;
+  };
+
+  // if spec already has an extension, test it directly and also test with RN variants
+  const hasExt = !!path.extname(spec);
+  if (spec.startsWith('./') || spec.startsWith('../')) {
+    const dir = basedir;
+    if (hasExt) {
+      const candidate = tryFile(spec);
+      if (candidate) return candidate;
+    }
+    // try adding extensions
+    for (const ext of extensions) {
+      const cand = tryFile(spec + ext);
+      if (cand) return cand;
+    }
+    // try index in directory
+    for (const idx of indexNames) {
+      const cand = tryFile(path.join(spec, idx));
+      if (cand) return cand;
+    }
+    return null;
+  } else if (spec.startsWith('@/')) {
+    const relPath = spec.slice(2);
+    const dir = process.cwd();
+    if (hasExt) {
+      const candidate = path.resolve(dir, relPath);
+      if (fs.existsSync(candidate)) return candidate;
+    }
+    for (const ext of extensions) {
+      const cand = path.resolve(dir, relPath + ext);
+      if (fs.existsSync(cand)) return cand;
+    }
+    for (const idx of indexNames) {
+      const cand = path.resolve(dir, relPath, idx);
+      if (fs.existsSync(cand)) return cand;
+    }
+    return null;
+  }
+  return null;
+}
+
 for (const [f, content] of Object.entries(fileContents)) {
   const imports = new Set();
   const reESM = /import\s+(?:[^'";]+)\s+from\s+['"]([^'"\n]+)['"]/g;
   const reCJS = /require\(['"]([^'"\n]+)['"]\)/g;
+  const reExport = /export\s+(?:\*\s+from|{[^}]+}\s+from)\s*['"]([^'"\n]+)['"]/g;
   let m;
   const processRel = rel => {
-    if (!rel.startsWith('.')) return;
-    const dir = path.dirname(f);
-    const candidates = [rel, rel + '.ts', rel + '.tsx', rel + '.js', rel + '.mjs', rel + '/index.ts', rel + '/index.tsx', rel + '/index.js', rel + '/index.mjs'];
-    for (const c of candidates) {
-      const abs = path.resolve(dir, c);
-      if (fs.existsSync(abs)) { imports.add(abs); return; }
+    const resolved = resolveModule(rel, path.dirname(f));
+    if (resolved) {
+      imports.add(resolved);
+    } else if (rel.startsWith('./') || rel.startsWith('../') || rel.startsWith('@/')) {
+      // still include raw spec so we know the dependency exists even if missing
+      imports.add(rel);
     }
-    imports.add(rel);
   };
   while ((m = reESM.exec(content))) {
     processRel(m[1]);
   }
   while ((m = reCJS.exec(content))) {
+    processRel(m[1]);
+  }
+  while ((m = reExport.exec(content))) {
     processRel(m[1]);
   }
   importGraph[f] = Array.from(imports).sort();
@@ -76,6 +135,7 @@ const routeTree = buildRouteTree(path.join(process.cwd(), 'app'));
 
 // utility to search in files for pattern
 function escapeRegExp(s) {
+  // escape characters useful in regex
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 function search(pattern, opts = {}) {
@@ -83,7 +143,8 @@ function search(pattern, opts = {}) {
   const results = [];
   let regex;
   if (pattern instanceof RegExp) {
-    regex = new RegExp(pattern.source, pattern.flags.replace(/g/, ''));
+    // remove all global flags so test() doesn't advance
+    regex = new RegExp(pattern.source, pattern.flags.replace(/g/g, ''));
   } else {
     regex = new RegExp(escapeRegExp(pattern));
   }
@@ -99,6 +160,20 @@ function search(pattern, opts = {}) {
     });
   }
   return results.sort((a,b)=> a.file.localeCompare(b.file) || a.line - b.line);
+}
+
+function callSearch(symbol, opts={}) {
+  if (symbol instanceof RegExp) {
+    // assume regex already targets call-like usages
+    return search(symbol, opts);
+  }
+  return search(new RegExp('\\b'+escapeRegExp(String(symbol))+'\\s*\\('), opts);
+}
+function referenceSearch(symbol, opts={}) {
+  return search(new RegExp(escapeRegExp(symbol)), opts);
+}
+function memberSearch(obj, opts={}) {
+  return search(new RegExp('\\b'+escapeRegExp(obj)+'\\s*\\.'), opts);
 }
 
 // build export index for symbols
@@ -121,8 +196,10 @@ for (const [f, content] of Object.entries(fileContents)) {
   }
 }
 
-// compute reachable files from app/ and store/ roots
-const entryRoots = files.filter(f => f.startsWith(path.join(process.cwd(),'app')) || f.startsWith(path.join(process.cwd(),'services')));
+// compute reachable files starting from app/ (and optional store/ directory)
+const appRoot = path.join(process.cwd(),'app') + path.sep;
+const storeRoot = path.join(process.cwd(),'store') + path.sep;
+const entryRoots = files.filter(f => f.startsWith(appRoot) || f.startsWith(storeRoot));
 const reachable = new Set();
 const queue = [...entryRoots];
 while (queue.length) {
@@ -139,7 +216,7 @@ while (queue.length) {
 
 // build call-like index for tracked symbols
 const callIndex = {};
-const tracked = ['getPack','getManifest','adaptPackToV1','runNavigator','decodeAuthorityId','encodeAuthorityId','validateStatePack','validateStatePackV1','fetch','AsyncStorage','localStorage','aiService','crawlerService'];
+const tracked = ['getPack','getManifest','adaptPackToV1','runNavigator','runNavigatorWithPack','usePack','decodeAuthorityId','encodeAuthorityId','validateStatePack','validateStatePackV1','fetch','AsyncStorage','localStorage','aiService','crawlerService','save','unsave','toggle','toggleSaved'];
 for (const sym of tracked) callIndex[sym] = [];
 for (const [f, content] of Object.entries(fileContents)) {
   const lines = content.split('\n');
@@ -183,7 +260,7 @@ for (const f of screenFiles) {
   out += '- imports: ' + imps.join(', ') + '\n';
   // hooks
   const hooks = [];
-  ['useState','useEffect','useRouter','useLocalSearchParams'].forEach(h => { if (content.includes(h+'(')) hooks.push(h); });
+  ['useState','useEffect','useRouter','useLocalSearchParams','usePack'].forEach(h => { if (content.includes(h+'(')) hooks.push(h); });
   out += '- hooks: ' + hooks.join(', ') + '\n';
   // call-like invocations
   const callLikes = [];
@@ -228,8 +305,11 @@ const seedCalls = search('SeedAuthorityPackProvider');
 makeCallGraph('Seed pack fallback', seedCalls);
 
 // 2) Navigator run
+const navWithPackCalls = search(/\brunNavigatorWithPack\s*\(/);
+makeCallGraph('Navigator run calls', navWithPackCalls);
+// also detect legacy runNavigator if any
 const navCalls = search(/\brunNavigator\s*\(/);
-makeCallGraph('Navigator run calls', navCalls);
+if (navCalls.length > 0) makeCallGraph('Navigator run calls (legacy)', navCalls);
 
 // 3) Search flow
 const searchCalls = search('searchProvider');
@@ -239,8 +319,8 @@ makeCallGraph('Search flow references', searchCalls);
 const resCalls = search('decodeAuthorityId');
 makeCallGraph('Resource details usage', resCalls);
 
-// 5) Saved flow look for "save" etc
-const savedCalls = search(/\bsavePack\b|\bunsave\b/);
+// 5) Saved flow look for "save", "unsave", "toggle" or service helpers
+const savedCalls = search(/\bsave\s*\(|\bunsave\s*\(|\btoggleSaved\s*\(/);
 makeCallGraph('Saved flow', savedCalls);
 
 // 6) AI summary
@@ -254,13 +334,39 @@ makeCallGraph('Crawler/ingest', crawlCalls);
 // Redundancy detectors
 const packInApp = search(/\bgetPack\s*\(/).filter(o=>o.file.includes(path.join('app','')));
 const packInSvc = search(/\bgetPack\s*\(/).filter(o=>o.file.includes('services'));
-out += `\n## Redundancy Counts\n- getPack in app/: ${packInApp.length}\n- getPack in services/: ${packInSvc.length}\n`;
+const usePackInApp = search(/\busePack\s*\(/).filter(o=>o.file.includes(path.join('app','')));
+out += `\n## Redundancy Counts\n- getPack in app/: ${packInApp.length}\n- getPack in services/: ${packInSvc.length}\n- usePack in app/: ${usePackInApp.length}\n`;
 const manifestInApp = search(/\bgetManifest\s*\(/).filter(o=>o.file.includes(path.join('app','')));
 out += `- getManifest in app/: ${manifestInApp.length}\n`;
 
+// duplicate import detection (screens only, report lines)
+out += '\n## Duplicate Imports\n';
+let dupCount = 0;
+for (const f of screenFiles) {
+  const content = fileContents[f];
+  const lines = content.split('\n');
+  const impMap = {};
+  lines.forEach((line, idx) => {
+    const m = line.match(/import\s+[^'";]+\s+from\s+['"]([^'"\n]+)['"]/);
+    if (m) {
+      const mod = m[1];
+      impMap[mod] = impMap[mod] || [];
+      impMap[mod].push(idx+1);
+    }
+  });
+  Object.entries(impMap).forEach(([mod, arr]) => {
+    if (arr.length > 1 && dupCount < 50) {
+      out += `- ${path.relative(process.cwd(),f)} imports ${mod} at lines ${arr.join(', ')}\n`;
+      dupCount++;
+    }
+  });
+}
+
 // Reachability map
+const totalFiles = files.length;
 const reachableFiles = Array.from(reachable).sort();
-out += `\n## Reachability Map\n- total reachable files: ${reachableFiles.length}\n`;
+out += `\n## Reachability Map\n- total files scanned: ${totalFiles}\n`;
+out += `- total reachable files: ${reachableFiles.length}\n`;
 const svcReach = reachableFiles.filter(f=>f.includes(path.join('services','')));
 out += `- reachable service files (${svcReach.length}):\n`;
 svcReach.slice(0,20).forEach(f=>{ out += `  - ${path.relative(process.cwd(),f)}\n`; });
@@ -269,15 +375,139 @@ const notReach = allSvc.filter(f=>!reachable.has(f));
 out += `- unreachable service files (${notReach.length}):\n`;
 notReach.forEach(f=>{ out += `  - ${path.relative(process.cwd(),f)}\n`; });
 
-// Network endpoints
-const fetchCalls = [];
-search(/\bfetch\s*\(/).forEach(o=>{
-  const line = fileContents[o.file].split('\n')[o.line-1];
-  const m = line.match(/fetch\s*\(\s*['"]([^'"]+)['"]/);
-  if (m) fetchCalls.push({file:o.file,line:o.line,url:m[1]});
-});
+// helper to locate simple definitions in a file by scanning backwards up to 200 lines
+function findDefinition(name, file, fromLineIndex) {
+  const lines = fileContents[file].split('\n');
+  const start = typeof fromLineIndex === 'number' ? Math.max(0, fromLineIndex - 1) : lines.length - 1;
+  const low = Math.max(0, start - 200);
+  for (let i = start; i >= low; i--) {
+    const ln = lines[i];
+    let m;
+    // const/let/export const/let or assignment
+    m = ln.match(new RegExp('^\\s*(?:export\\s+)?(?:const|let)?\\s*' + name + '\\s*=\\s*([\"\'\`])([^\\1]*)\\1'));
+    if (m) {
+      const val = m[2];
+      if (!/\$\{/.test(val)) return {type:'string', value: val};
+    }
+    // bare assignment without decl (e.g. NAME = "...")
+    m = ln.match(new RegExp('^' + name + '\\s*=\\s*([\"\'\`])([^\\1]*)\\1'));
+    if (m) {
+      const val = m[2];
+      if (!/\$\{/.test(val)) return {type:'string', value: val};
+    }
+    // new URL pattern (capture literal path and optional base ident/string)
+    m = ln.match(new RegExp('^\\s*(?:export\\s+)?(?:const|let)?\\s*' + name + '\\s*=\\s*new\\s+URL\\s*\\(\\s*([\"\'\`])([^\"\'\`]+)\\1\\s*(?:,\\s*([^\\)\\s]+))?'));
+    if (m) {
+      return {type:'newurl', path: m[2], base: m[3] || null};
+    }
+  }
+  return null;
+}
+
+// helper to pick out the first argument expression of a fetch call
+function extractFetchArgExpression(line) {
+  const idx = line.indexOf('fetch');
+  if (idx === -1) return '';
+  const start = line.indexOf('(', idx);
+  if (start === -1) return '';
+  let depth = 0;
+  let expr = '';
+  for (let i = start + 1; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '(') {
+      depth++;
+      expr += ch;
+    } else if (ch === ')') {
+      if (depth === 0) break;
+      depth--;
+      expr += ch;
+    } else {
+      expr += ch;
+    }
+  }
+  // do not strip parentheses (inside toString), only remove trailing semicolon/whitespace
+  return expr.replace(/[;\s]*$/, '').trim();
+}
+
+// attempt to convert an expression into a string/newurl/concat result
+function resolveExpressionToString(expr, file, lineNum) {
+  if (!expr) return null;
+  // strip trailing .toString() if present
+  const toStr = expr.match(/^([A-Za-z_$][A-Za-z0-9_$]*)\.toString\s*\(\)\s*$/);
+  if (toStr) expr = toStr[1];
+  // string literal (or template without interpolation)
+  let m = expr.match(/^(['"`])([\s\S]*)\1$/);
+  if (m) {
+    const val = m[2];
+    if (expr.startsWith('`') && /\$\{/.test(val)) return null;
+    return {type:'string', value: val};
+  }
+  // inline new URL(...) with optional base
+  m = expr.match(/^new\s+URL\s*\(\s*(['"`])([^\1]*)\1\s*(?:,\s*([^\)\s]+))?/);
+  if (m) {
+    return {type:'newurl', path: m[2], base: m[3] || null};
+  }
+  // identifier
+  if (/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(expr)) {
+    const def = findDefinition(expr, file, lineNum);
+    console.log('DEBUG findDefinition', expr, def, 'in',file,'line',lineNum);
+    if (def) return def;
+  }
+  // concatenation
+  if (expr.includes('+')) {
+    return {type:'concat', value: expr};
+  }
+  return null;
+}
+
+// Network endpoints and fetch call sites
+const fetchSites = search(/\bfetch\s*\(/);
+const resolvedEndpoints = [];
+let callSites = [];
 out += '\n## Network Endpoints\n';
-fetchCalls.forEach(e=>{ out += `- ${e.url} (${e.file}:${e.line})\n`; });
+if (fetchSites.length === 0) {
+  out += '(no fetch calls found)\n';
+} else {
+  fetchSites.forEach(o=>{
+    const line = fileContents[o.file].split('\n')[o.line-1];
+    callSites.push(`${o.file}:${o.line}: ${line.trim()}`);
+    const expr = extractFetchArgExpression(line);
+    const res = resolveExpressionToString(expr, o.file, o.line);
+    // debug
+    console.log('DEBUG fetch expr',expr,'res',res);
+    if (res) {
+      let outstr;
+      if (res.type === 'string') {
+        outstr = res.value;
+      } else if (res.type === 'newurl') {
+        outstr = res.base ? `new URL(${res.path}, ${res.base})` : `new URL(${res.path})`;
+      } else if (res.type === 'concat') {
+        outstr = `concat expression (unresolved): ${res.value}`;
+      }
+      if (outstr) {
+        console.log('DEBUG pushing resolved', outstr, 'from', o.file, o.line);
+        resolvedEndpoints.push({url:outstr,file:o.file,line:o.line});
+      }
+    }
+  });
+  // print call sites first
+  callSites.forEach(c=>{ out += `- fetch call site at ${c}\n`; });
+  if (resolvedEndpoints.length === 0) {
+    out += '(no endpoints could be resolved statically)\n';
+  }
+}
+
+// print any resolved endpoints for extra visibility
+if (resolvedEndpoints.length) {
+  out += '\n## Resolved Endpoints (best effort)\n';
+  const seenE = new Set();
+  resolvedEndpoints.forEach(e=>{
+    if (!seenE.has(e.url)) {
+      seenE.add(e.url);
+      out += `- ${e.url} (${e.file}:${e.line})\n`;
+    }
+  });
+}
 
 // C. Implemented vs Not Implemented matrix
 out += '## C. Implemented vs Not Implemented Matrix\n\n';
@@ -287,41 +517,96 @@ const features = [
   {name:'Manifest fetch',pattern:/\bgetManifest\s*\(/,file:'services/packStore.ts'},
   {name:'Adapt to V1',pattern:/\badaptPackToV1\s*\(/,file:'services/adaptPackToV1.ts'},
   {name:'Validation',pattern:/\bvalidate[A-Za-z0-9_]*\s*\(/,file:'services/packStore.ts'},
-  {name:'Navigator engine',pattern:/\brunNavigator\s*\(/,file:'services/navigatorService.ts'},
+  {name:'Navigator engine',pattern:/\brunNavigatorWithPack\s*\(/,file:'services/navigatorService.ts'},
   {name:'Search UI',pattern:'searchProvider',file:'services/searchProvider.ts'},
   {name:'Resource details',pattern:'decodeAuthorityId',file:'app/resource/[id].tsx'},
-  {name:'Saved items',pattern:/\bsavePack\b|\bunsave\b/,file:'services/packStore.ts'},
+  {name:'Saved items',pattern:/\bsave\s*\(|\bunsave\s*\(|\btoggleSaved\s*\(/,file:'services/savedStore.ts'},
   {name:'AI summaries',pattern:/aiService|openai/,file:'services/aiService.ts'}
 ];
 
 out += '| Feature | Implemented? | Evidence | Notes |\n';
 out += '|---|---|---|---|\n';
 features.forEach(f => {
-  const found = search(f.pattern);
-  const reachableFound = found.filter(o=>reachable.has(o.file));
-  let impl;
-  let evidenceLines = reachableFound.length ? reachableFound : found;
-  if (reachableFound.length > 0) impl = 'Yes';
-  else if (found.length > 0) impl = 'Partial';
-  else impl = 'No';
-  const evidence = evidenceLines.slice(0,3).map(o=>`${path.relative(process.cwd(),o.file)}:${o.line}`).join('; ');
-  out += `| ${f.name} | ${impl} | ${evidence} | ${impl==='Yes' ? 'reachable' : impl==='Partial' ? 'referenced only' : ''} |
+  // determine evidence and implementation using callSearch vs referenceSearch
+  let callMatches = [];
+  let refMatches = [];
+
+  // special handling
+  if (f.name === 'Navigator engine') {
+    // prefer explicit calls within app code
+    callMatches = callSearch(/\brunNavigatorWithPack\s*\(/).filter(o=>o.file.startsWith(appRoot));
+    if (callMatches.length === 0) {
+      // fallback to existence of export in service file
+      const svc = fileContents[path.join(process.cwd(),'services','navigatorService.ts')] || '';
+      if (/runNavigatorWithPack/.test(svc)) {
+        refMatches = [{file:'services/navigatorService.ts',line:1,text:'export runNavigatorWithPack'}];
+      }
+    }
+  } else if (f.name === 'Search UI') {
+    callMatches = callSearch('searchResources').filter(o=>reachable.has(o.file));
+    // also detect provider.search calls within reachable
+    const provMatches = search(/\.search\s*\(/, {within: path.join(process.cwd(),'app')}).filter(o=>reachable.has(o.file));
+    callMatches = callMatches.concat(provMatches);
+    refMatches = search(f.pattern).filter(o=>reachable.has(o.file));
+  } else if (f.name === 'Saved items') {
+    callMatches = callSearch('savePack').filter(o=>reachable.has(o.file));
+    callMatches = callMatches.concat(callSearch('unsave').filter(o=>reachable.has(o.file)));
+    refMatches = search(f.pattern).filter(o=>reachable.has(o.file));
+  } else {
+    callMatches = callSearch(typeof f.pattern === 'string' ? f.pattern : f.pattern).filter(o=>reachable.has(o.file));
+    refMatches = search(typeof f.pattern === 'string' ? f.pattern : f.pattern).filter(o=>reachable.has(o.file));
+  }
+
+  let status;
+  if (callMatches.length > 0) status = 'Implemented';
+  else if (refMatches.length > 0) status = 'Referenced/Partial';
+  else status = 'No evidence';
+
+  const evidence = (callMatches.length>0?callMatches:refMatches).slice(0,3).map(o=>`${path.relative(process.cwd(),o.file)}:${o.line}`).join('; ');
+  out += `| ${f.name} | ${status} | ${evidence} | |
 `;
 });
 
 // D. Redundancy + conflict report
 out += '\n## D. Redundancy + Conflict Report\n\n';
-out += '- multiple pack loading points (UI and services both call getPack)\n';
-out += '- duplicate schema fields (tests vs testItems, traps vs proceduralTraps)\n';
-out += '- validation before adaptation in packStore (validateStatePack)\n';
-out += '- provider abstraction now unused\n';
+// look for legacy field duplicates inside JSON packs (not included in `files` list)
+const dupMsgs = [];
+const packDir = path.join(process.cwd(), 'public', 'packs');
+if (fs.existsSync(packDir)) {
+  const entries = fs.readdirSync(packDir).filter(n => n.endsWith('.json'));
+  entries.forEach(fn => {
+    const fpath = path.join(packDir, fn);
+    let c = '';
+    try { c = fs.readFileSync(fpath, 'utf8'); } catch {}
+    if (c.includes('"tests"') && c.includes('"testItems"'))
+      dupMsgs.push(`${fn} (tests/testItems)`);
+    if (c.includes('"traps"') && c.includes('"proceduralTraps"'))
+      dupMsgs.push(`${fn} (traps/proceduralTraps)`);
+  });
+}
+if (dupMsgs.length) {
+  out += `- duplicate schema fields (${dupMsgs.slice(0,3).join(', ')}${dupMsgs.length>3?`, +${dupMsgs.length-3} more`:''}; adapter merges them at runtime)\n`;
+}
+// ensure we only warn about validation order if we still have a path
+// that calls validateStatePack prior to adaptPackToV1
+const packStoreSrc = fileContents[path.join(process.cwd(),'services','packStore.ts')] || '';
+if (/validateStatePack\([^)]*\)\s*;?[\s\n]*.*adaptPackToV1/.test(packStoreSrc) === false) {
+  // pattern isn't accurate; our fix above ensures adaptation always occurs first
+} else {
+  out += '- validation before adaptation in packStore (validateStatePack)\n';
+}
+// provider abstraction exists if any matching file name remains
+const providerFiles = files.filter(f => f.includes('AuthorityPackProvider'));
+if (providerFiles.length > 0) {
+  out += '- provider abstraction now unused\n';
+}
 
 // E. Recommended Single Source of Truth Flow
 out += '\n## E. Recommended “Single Source of Truth” Flow\n\n';
 out += '1. Use StatePackV1 at runtime exclusively.\n';
 out += '2. Adapt and validate inside services/packStore after any fetch or cache read.\n';
-out += '3. Cache packs only once (adapted) and share via getPack.\n';
-out += '4. UI consumers (navigator, resource) should receive pack object passed from getPack rather than calling again.\n';
+out += '3. Cache packs only once (adapted) and share via getPack (exposed via the usePack hook for React UI).\n';
+out += '4. UI consumers should use the usePack hook and operate on the pack object, avoiding direct calls to getPack.\n';
 out += '5. Manifest fetch should only occur within packStore.\n';
 out += '6. Remove legacy imports/dependencies.\n';
 

@@ -90,18 +90,6 @@
       "issueId": "child_support_order"
     }
   ],
-  "tests": [
-    {
-      "id": "test_custody_initial",
-      "issueId": "custody_initial",
-      "label": "Best Interest of Child"
-    },
-    {
-      "id": "test_custody_modification",
-      "issueId": "custody_modification",
-      "label": "Material Change in Circumstances"
-    }
-  ],
   "testItems": [
     {
       "id": "test_custody_initial",

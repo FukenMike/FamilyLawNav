@@ -202,6 +202,10 @@ performing network requests.
 
 ## UI Structure
 
+### Pack Access
+Components should obtain authority packs via the `usePack` hook exported from `services/packStore`.  The hook wraps `getPack` and maintains cached state/status while ensuring packs are adapted to the canonical `StatePackV1` shape.  UI code no longer calls `getPack` directly.
+
+
 ### Navigator Tab
 
 Location:

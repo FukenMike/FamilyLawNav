@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import { View, Text, StyleSheet, ActivityIndicator, ScrollView } from 'react-native'
+import { View, Text, StyleSheet, ActivityIndicator, ScrollView, TouchableOpacity } from 'react-native'
 
 import { useLocalSearchParams } from 'expo-router'
 import { decodeAuthorityId } from '@/services/authorityIdHelpers'
-import { getPack } from '@/services/packStore'
+import { usePack } from '@/services/packStore'
+import { isSaved, toggle as toggleSaved } from '@/services/savedStore'
 
 export default function ResourceRoute() {
   const { id, state } = useLocalSearchParams<{ id: string, state?: string }>();
@@ -12,9 +13,12 @@ export default function ResourceRoute() {
   const [authority, setAuthority] = useState<any | null>(null);
   const [referencedBy, setReferencedBy] = useState<string[]>([]);
   const [decodedCitation, setDecodedCitation] = useState<string>("");
+  const [saved, setSaved] = useState<boolean>(false);
+  const stateCode = typeof state === 'string' ? state : '';
+  const { pack, status: packStatus } = usePack(stateCode);
 
   useEffect(() => {
-    if (!id || !state) {
+    if (!id || !stateCode) {
       setError("Missing state or citation");
       setLoading(false);
       return;
@@ -23,28 +27,26 @@ export default function ResourceRoute() {
     setError(null);
     const citation = decodeAuthorityId(id);
     setDecodedCitation(citation);
-    getPack(state).then(res => {
-      const pack = res.pack;
-      if (!pack || !pack.authorities) {
-        setAuthority(null);
-        setReferencedBy([]);
-        setLoading(false);
-        return;
-      }
-      const meta = pack.authorities[citation] || null;
-      const referenced: string[] = [];
-      for (const [issueId, citations] of Object.entries(pack.authoritiesByIssue || {})) {
-        const list = citations as string[];
-        if (list.includes(citation)) referenced.push(issueId);
-      }
-      setAuthority(meta);
-      setReferencedBy(referenced);
+
+    if (!pack || !pack.authorities) {
+      setAuthority(null);
+      setReferencedBy([]);
       setLoading(false);
-    }).catch(e => {
-      setError(e.message);
-      setLoading(false);
-    });
-  }, [id, state]);
+      return;
+    }
+    const meta = pack.authorities[citation] || null;
+    const referenced: string[] = [];
+    for (const [issueId, citations] of Object.entries(pack.authoritiesByIssue || {})) {
+      const list = citations as string[];
+      if (list.includes(citation)) referenced.push(issueId);
+    }
+    setAuthority(meta);
+    setReferencedBy(referenced);
+    setLoading(false);
+
+    // check saved state
+    isSaved(id).then(s => setSaved(s)).catch(() => {});
+  }, [id, stateCode, pack]);
 
   if (loading) {
     return (
@@ -73,6 +75,17 @@ export default function ResourceRoute() {
       <View>
         <Text style={styles.title}>{authority.title || decodedCitation}</Text>
         <Text style={styles.value}>{authority.kind}</Text>
+        <TouchableOpacity
+          style={[styles.saveBtn, saved ? styles.saveBtnActive : null]}
+          onPress={async () => {
+            const newState = await toggleSaved(id);
+            setSaved(newState);
+          }}
+        >
+          <Text style={saved ? styles.saveBtnTextActive : styles.saveBtnText}>
+            {saved ? 'Unsave' : 'Save'}
+          </Text>
+        </TouchableOpacity>
         {authority.rank && <Text style={styles.value}>Rank: {authority.rank}</Text>}
         {authority.courtScope && <Text style={styles.value}>Court: {authority.courtScope}</Text>}
         {authority.sources && authority.sources.length > 0 && (
@@ -128,6 +141,25 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginTop: 18,
     marginBottom: 6,
+  },
+  saveBtn: {
+    marginTop: 8,
+    alignSelf: 'flex-start',
+    backgroundColor: '#eee',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  saveBtnActive: {
+    backgroundColor: '#1976d2',
+  },
+  saveBtnText: {
+    color: '#333',
+    fontWeight: '600',
+  },
+  saveBtnTextActive: {
+    color: '#fff',
+    fontWeight: '600',
   },
   error: {
     color: '#b00020',
