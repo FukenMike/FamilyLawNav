@@ -2,6 +2,11 @@
 
 ## A. App Entry + Navigation
 
+> **Build Guards (repo scripts):** `npx tsc --noEmit`, `npm run check:routes`, `npm run check:packs`, `npm run check:env`, `npm run audit:arch`
+>
+> **Audit generator:** `npm run audit:arch` (scripts/audit-architecture.mjs)
+
+
 **Route tree under `app/`:**
 
 - (tabs)/
@@ -120,7 +125,12 @@
 - /home/michael/Desktop/FamilyLawNav/app/resource/[id].tsx:119 -> const res = await summarizeAuthority(text || '');
 - /home/michael/Desktop/FamilyLawNav/services/aiService.ts:3 -> export async function summarizeAuthority(authorityText: string): Promise<string> {
 
-### Crawler/ingest
+### Crawler/ingest (status)
+- In-app crawling not implemented.
+- Current ingestion path is Pack Builder: `npm run build:packs` → `tools/pack-builder` → `public/packs` + `manifest.json`
+- Seed/discovery sources are intended to live in `pack.jurisdiction_sources` (statutes index, judiciary rules/forms, opinions search).
+- External crawler can be added later without changing UI/engine contracts.
+
 
 ## Pack Builder Pipeline
 
