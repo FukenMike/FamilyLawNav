@@ -1,169 +1,249 @@
 {
-  "quality": "curated",
-  "schemaVersion": "1",
   "state": "GA",
-  "packVersion": "2026.02.21",
+  "schemaVersion": "1",
+  "packVersion": "2026-02-24T20:07:40.055Z",
+  "jurisdiction_sources": {
+    "official_code": "",
+    "judiciary_rules": "",
+    "judiciary_forms": "",
+    "opinions_search": "",
+    "legal_aid_portal": ""
+  },
   "domains": [
     {
-      "id": "custody",
-      "label": "Custody"
+      "id": "divorce",
+      "label": "divorce",
+      "status": "partial",
+      "issues": [
+        {
+          "id": "marriage",
+          "label": "marriage",
+          "summary": "",
+          "authorities": [
+            "ga-stat-1"
+          ],
+          "legal_tests": [],
+          "procedural_traps": [],
+          "forms_and_guides": [],
+          "notes": "",
+          "needs_verification": false
+        },
+        {
+          "id": "divorce",
+          "label": "divorce",
+          "summary": "",
+          "authorities": [
+            "ga-stat-2",
+            "ga-form-1"
+          ],
+          "legal_tests": [],
+          "procedural_traps": [],
+          "forms_and_guides": [],
+          "notes": "",
+          "needs_verification": false
+        }
+      ]
     },
     {
       "id": "support",
-      "label": "Support"
+      "label": "support",
+      "status": "partial",
+      "issues": [
+        {
+          "id": "support",
+          "label": "support",
+          "summary": "",
+          "authorities": [
+            "ga-case-1",
+            "ga-stat-4"
+          ],
+          "legal_tests": [],
+          "procedural_traps": [],
+          "forms_and_guides": [],
+          "notes": "",
+          "needs_verification": false
+        }
+      ]
     },
     {
-      "id": "dependency",
-      "label": "Dependency"
+      "id": "custody",
+      "label": "custody",
+      "status": "partial",
+      "issues": [
+        {
+          "id": "custody",
+          "label": "custody",
+          "summary": "",
+          "authorities": [
+            "ga-rule-1",
+            "ga-guide-1"
+          ],
+          "legal_tests": [],
+          "procedural_traps": [],
+          "forms_and_guides": [],
+          "notes": "",
+          "needs_verification": false
+        }
+      ]
+    },
+    {
+      "id": "procedure",
+      "label": "procedure",
+      "status": "partial",
+      "issues": [
+        {
+          "id": "jurisdiction",
+          "label": "jurisdiction",
+          "summary": "",
+          "authorities": [
+            "ga-stat-3"
+          ],
+          "legal_tests": [],
+          "procedural_traps": [],
+          "forms_and_guides": [],
+          "notes": "",
+          "needs_verification": false
+        },
+        {
+          "id": "adoption",
+          "label": "adoption",
+          "summary": "",
+          "authorities": [
+            "ga-case-2"
+          ],
+          "legal_tests": [],
+          "procedural_traps": [],
+          "forms_and_guides": [],
+          "notes": "",
+          "needs_verification": false
+        }
+      ]
+    },
+    {
+      "id": "protection_orders",
+      "label": "protection_orders",
+      "status": "partial",
+      "issues": [
+        {
+          "id": "domestic_violence",
+          "label": "domestic_violence",
+          "summary": "",
+          "authorities": [
+            "ga-case-3"
+          ],
+          "legal_tests": [],
+          "procedural_traps": [],
+          "forms_and_guides": [],
+          "notes": "",
+          "needs_verification": false
+        }
+      ]
+    },
+    {
+      "id": "paternity",
+      "label": "Paternity",
+      "status": "empty",
+      "issues": []
+    },
+    {
+      "id": "service_notice",
+      "label": "Service & Notice",
+      "status": "empty",
+      "issues": []
+    },
+    {
+      "id": "enforcement",
+      "label": "Enforcement & Contempt",
+      "status": "empty",
+      "issues": []
     }
   ],
-  "issues": [
-    {
-      "id": "custody_initial",
-      "domainId": "custody",
-      "label": "Initial Custody Determination"
-    },
-    {
-      "id": "custody_modification",
-      "domainId": "custody",
-      "label": "Custody Modification"
-    },
-    {
-      "id": "emergency_custody",
-      "domainId": "custody",
-      "label": "Emergency Custody"
-    }
-  ],
-  "intakeQuestions": [],
-  "authoritiesByIssue": {
-    "custody_initial": [
-      "OCGA § 19-9-3",
-      "Smith v. Smith, 300 Ga. 123 (2016)"
-    ],
-    "custody_modification": [
-      "OCGA § 19-9-3",
-      "Jones v. Jones, 299 Ga. 456 (2016)"
-    ],
-    "emergency_custody": [
-      "OCGA § 19-9-1"
-    ]
-  },
   "authorities": {
-    "OCGA § 19-9-3": {
+    "ga-stat-1": {
       "kind": "statute",
-      "title": "Georgia Code Title 19, Section 9-3",
-      "rank": "binding",
-      "sources": [
-        "https://law.justia.com/codes/georgia/2010/title-19/19-9/19-9-3/"
-      ]
+      "title": "Marriage -- Definition",
+      "source_url": "https://www.lexisnexis.com/hottopics/gacode/",
+      "notes": "Defines marriage as a legal union between two persons."
     },
-    "OCGA § 19-9-1": {
+    "ga-stat-2": {
       "kind": "statute",
-      "title": "Georgia Code Title 19, Section 9-1",
-      "rank": "binding",
-      "sources": [
-        "https://law.justia.com/codes/georgia/2010/title-19/19-9/19-9-1/"
-      ]
+      "title": "Grounds for Divorce",
+      "source_url": "https://www.lexisnexis.com/hottopics/gacode/",
+      "notes": "Enumerates statutory grounds for divorce in GA."
     },
-    "Smith v. Smith, 300 Ga. 123 (2016)": {
+    "ga-case-1": {
       "kind": "case",
-      "title": "Smith v. Smith, 300 Ga. 123 (2016)",
-      "rank": "binding",
-      "courtScope": "Supreme Court of Georgia",
-      "sources": [
-        "https://casetext.com/case/smith-v-smith-1022"
-      ]
+      "title": "Spousal Support Guidelines",
+      "source_url": "",
+      "notes": "Court clarifies factors for alimony awards."
     },
-    "Jones v. Jones, 299 Ga. 456 (2016)": {
+    "ga-rule-1": {
+      "kind": "court_rule",
+      "title": "Child Custody Procedures",
+      "source_url": "",
+      "notes": "Rules governing custody determinations."
+    },
+    "ga-form-1": {
+      "kind": "form",
+      "title": "Petition for Divorce",
+      "source_url": "",
+      "notes": "Official form to start a divorce action."
+    },
+    "ga-guide-1": {
+      "kind": "guide",
+      "title": "Navigating Custody Proceedings",
+      "source_url": "",
+      "notes": "Practical tips for parents in custody disputes."
+    },
+    "ga-stat-3": {
+      "kind": "statute",
+      "title": "Juvenile Court Jurisdiction",
+      "source_url": "",
+      "notes": "Defines the jurisdiction of juvenile court."
+    },
+    "ga-case-2": {
       "kind": "case",
-      "title": "Jones v. Jones, 299 Ga. 456 (2016)",
-      "rank": "binding",
-      "courtScope": "Supreme Court of Georgia",
-      "sources": [
-        "https://casetext.com/case/jones-v-jones-102"
-      ]
+      "title": "Adoption Requirements",
+      "source_url": "",
+      "notes": "Clarifies statutory prerequisites for adoption."
+    },
+    "ga-stat-4": {
+      "kind": "statute",
+      "title": "Child Support Guidelines",
+      "source_url": "",
+      "notes": "Sets forth formula for calculating child support."
+    },
+    "ga-case-3": {
+      "kind": "case",
+      "title": "Domestic Violence Definitions",
+      "source_url": "",
+      "notes": "Court defines \"domestic violence\" under statute."
     }
   },
-  "legalTests": [
-    {
-      "id": "test_custody_initial",
-      "issueId": "custody_initial",
-      "label": "Best Interest of the Child",
-      "description": "Court considers all relevant factors to determine best interest."
-    },
-    {
-      "id": "test_custody_modification",
-      "issueId": "custody_modification",
-      "label": "Material Change in Circumstances",
-      "description": "Parent seeking modification must show material change."
-    },
-    {
-      "id": "test_emergency_custody",
-      "issueId": "emergency_custody",
-      "label": "Immediate Harm",
-      "description": "Immediate risk of harm to child justifies emergency action."
-    }
-  ],
-  "testItems": [
-    {
-      "id": "item1",
-      "testId": "test_custody_initial",
-      "label": "Child's wishes considered",
-      "required": false
-    },
-    {
-      "id": "item2",
-      "testId": "test_custody_initial",
-      "label": "Parental fitness",
-      "required": true
-    },
-    {
-      "id": "item3",
-      "testId": "test_custody_initial",
-      "label": "History of abuse",
-      "required": true
-    },
-    {
-      "id": "item4",
-      "testId": "test_custody_modification",
-      "label": "Material change proven",
-      "required": true
-    },
-    {
-      "id": "item5",
-      "testId": "test_custody_modification",
-      "label": "Change affects child welfare",
-      "required": true
-    },
-    {
-      "id": "item6",
-      "testId": "test_emergency_custody",
-      "label": "Evidence of immediate harm",
-      "required": true
-    }
-  ],
-  "gaps": [],
-  "proceduralTraps": [
-    {
-      "id": "trap1",
-      "issueId": "custody_initial",
-      "label": "Notice/Hearing Timing",
-      "description": "Proper notice and hearing required.",
-      "severity": "med"
-    },
-    {
-      "id": "trap2",
-      "issueId": "custody_modification",
-      "label": "Venue/Jurisdiction",
-      "description": "Correct court must be used.",
-      "severity": "high"
-    },
-    {
-      "id": "trap3",
-      "issueId": "emergency_custody",
-      "label": "Service Requirements",
-      "description": "All parties must be served.",
-      "severity": "high"
-    }
-  ]
+  "authoritiesByIssue": {
+    "marriage": [
+      "ga-stat-1"
+    ],
+    "divorce": [
+      "ga-stat-2",
+      "ga-form-1"
+    ],
+    "support": [
+      "ga-case-1",
+      "ga-stat-4"
+    ],
+    "custody": [
+      "ga-rule-1",
+      "ga-guide-1"
+    ],
+    "jurisdiction": [
+      "ga-stat-3"
+    ],
+    "adoption": [
+      "ga-case-2"
+    ],
+    "domestic_violence": [
+      "ga-case-3"
+    ]
+  }
 }

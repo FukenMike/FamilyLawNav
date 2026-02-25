@@ -21,6 +21,15 @@ function walk(dir, filelist = []) {
   return filelist;
 }
 
+// filesystem helpers used in pack builder audit
+function fileExists(p) {
+  try { return fs.existsSync(p); } catch { return false; }
+}
+function readJson(p) {
+  try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch { return null; }
+}
+
+
 // read file content mapping
 const files = walk(process.cwd());
 const fileContents = {};
@@ -216,7 +225,7 @@ while (queue.length) {
 
 // build call-like index for tracked symbols
 const callIndex = {};
-const tracked = ['getPack','getManifest','adaptPackToV1','runNavigator','runNavigatorWithPack','usePack','decodeAuthorityId','encodeAuthorityId','validateStatePack','validateStatePackV1','fetch','AsyncStorage','localStorage','aiService','crawlerService','save','unsave','toggle','toggleSaved'];
+const tracked = ['getPack','getManifest','adaptPackToV1','runNavigator','runNavigatorWithPack','usePack','decodeAuthorityId','encodeAuthorityId','validateStatePack','validateStatePackV1','fetch','AsyncStorage','localStorage','aiService','crawlerService','save','unsave','toggle','toggleSaved','buildPack','buildPackForState','writePack','writeManifest','validatePack'];
 for (const sym of tracked) callIndex[sym] = [];
 for (const [f, content] of Object.entries(fileContents)) {
   const lines = content.split('\n');
@@ -331,7 +340,140 @@ makeCallGraph('AI summary', aiCalls);
 const crawlCalls = search(/crawl|ingest/);
 makeCallGraph('Crawler/ingest', crawlCalls);
 
-// Redundancy detectors
+// Pack Builder Pipeline checks
+out += '## Pack Builder Pipeline\n\n';
+// package.json script
+try {
+  const pkg = JSON.parse(fs.readFileSync(path.join(process.cwd(),'package.json'),'utf8'));
+  if (pkg.scripts && pkg.scripts['build:packs']) {
+    out += '- package.json contains script "build:packs"\n';
+  } else {
+    out += '- missing npm script "build:packs"\n';
+  }
+} catch {
+  out += '- package.json not readable\n';
+}
+// check existence of builder files
+['index.js','config.js'].forEach(fn => {
+  const p = path.join(process.cwd(),'tools/pack-builder',fn);
+  out += `- ${p} ${fileExists(p)?'exists':'MISSING'}\n`;
+});
+// check output dir
+const packsDir = path.join(process.cwd(),'public','packs');
+out += `- public/packs ${fileExists(packsDir)?'exists':'MISSING'}\n`;
+const manifestPath = path.join(packsDir,'manifest.json');
+if (fileExists(manifestPath)) {
+  out += '- manifest.json exists\n';
+  const manifest = readJson(manifestPath);
+  if (manifest && typeof manifest === 'object') {
+    out += `  - schemaVersion: ${manifest.schemaVersion}\n`;
+    out += `  - pack entries: ${manifest.packs?Object.keys(manifest.packs).length:0}\n`;
+    if (manifest.packs) {
+      Object.entries(manifest.packs).forEach(([st,entry])=>{
+        const packPath = path.join(packsDir,st+'.json');
+        out += `  - state ${st}: ` + (fileExists(packPath)?'file exists':'MISSING') + '\n';
+        if (fileExists(packPath)) {
+          const pjson = readJson(packPath);
+          if (pjson) {
+            const validShape = pjson.state===st && pjson.schemaVersion && pjson.packVersion && Array.isArray(pjson.domains);
+            out += `    - shape ok? ${validShape}\n`;
+          }
+        }
+        if (entry && entry.packVersion) {
+          out += `    - manifest packVersion: ${entry.packVersion}\n`;
+        }
+      });
+    }
+  }
+} else {
+  out += '- manifest.json missing\n';
+}
+
+// additional pack builder validations
+if (fileExists(manifestPath)) {
+  const manifest = readJson(manifestPath) || {};
+  const states = manifest.packs ? Object.keys(manifest.packs) : [];
+  const packFiles = fileExists(packsDir)
+    ? fs.readdirSync(packsDir).filter(f=>f.endsWith('.json') && f!=='manifest.json')
+    : [];
+  const packStates = packFiles.map(f=>path.basename(f,'.json'));
+  const missing = states.filter(s=>!packStates.includes(s));
+  const extra = packStates.filter(s=>!states.includes(s));
+  out += `- pack file reconciliation: missing ${missing.join(',') || 'none'}, extra ${extra.join(',') || 'none'}\n`;
+
+  states.forEach(st=>{
+    const packPath = path.join(packsDir, st + '.json');
+    if (!fileExists(packPath)) return;
+    const pjson = readJson(packPath) || {};
+    const domainIds = Array.isArray(pjson.domains)?pjson.domains.map(d=>d.id):[];
+    const issueIds = Array.isArray(pjson.issues)?pjson.issues.map(i=>i.id):[];
+
+    // domains unique
+    const dupDom = domainIds.filter((v,i,a)=>a.indexOf(v)!==i);
+    if (dupDom.length) out += `  - ${st}: duplicate domain ids ${dupDom.join(',')}\n`;
+
+    // authorities domains referenced
+    if (pjson.authorities) {
+      Object.entries(pjson.authorities).forEach(([aid,adata])=>{
+        if (Array.isArray(adata.domains)) {
+          adata.domains.forEach(did=>{
+            if (!domainIds.includes(did)) {
+              out += `  - ${st}: authority ${aid} references unknown domain ${did}\n`;
+            }
+          });
+        }
+        if (Array.isArray(adata.issues) && issueIds.length) {
+          adata.issues.forEach(iid=>{
+            if (!issueIds.includes(iid)) {
+              out += `  - ${st}: authority ${aid} references unknown issue ${iid}\n`;
+            }
+          });
+        }
+      });
+    }
+    // issues unique
+    if (issueIds.length) {
+      const dupIss = issueIds.filter((v,i,a)=>a.indexOf(v)!==i);
+      if (dupIss.length) out += `  - ${st}: duplicate issue ids ${dupIss.join(',')}\n`;
+    }
+    // authoritiesByIssue
+    if (pjson.authoritiesByIssue) {
+      Object.entries(pjson.authoritiesByIssue).forEach(([iid,list])=>{
+        if (issueIds.length && !issueIds.includes(iid)) {
+          out += `  - ${st}: authoritiesByIssue key ${iid} not a real issue\n`;
+        }
+        const uniq = [];
+        list.forEach(aid=>{
+          if (!pjson.authorities || !pjson.authorities[aid]) {
+            out += `  - ${st}: authoritiesByIssue ${iid} references unknown authority ${aid}\n`;
+          }
+          if (uniq.includes(aid)) {
+            out += `  - ${st}: duplicate authority ${aid} in issue ${iid}\n`;
+          }
+          uniq.push(aid);
+        });
+      });
+    }
+  });
+
+  // source coverage
+  try {
+    const cfg = require(path.join(process.cwd(),'tools','pack-builder','config.js'));
+    const configured = Array.isArray(cfg.STATES)?cfg.STATES:[];
+    const sourceFiles = [];
+    const srcDir = path.join(process.cwd(),'tools','pack-builder','sources');
+    if (fileExists(srcDir)) {
+      fs.readdirSync(srcDir).forEach(f=>{
+        if (f.endsWith('.js')) sourceFiles.push(path.basename(f,'.js').toUpperCase());
+      });
+    }
+    const missingSrc = configured.filter(s=>!sourceFiles.includes(s));
+    const extraSrc = sourceFiles.filter(s=>!configured.includes(s));
+    out += `- source coverage: configured states missing sources ${missingSrc.join(',')||'none'}; extra sources ${extraSrc.join(',')||'none'}\n`;
+  } catch (e) {
+    out += '- could not load pack-builder config for source coverage\n';
+  }
+}
 const packInApp = search(/\bgetPack\s*\(/).filter(o=>o.file.includes(path.join('app','')));
 const packInSvc = search(/\bgetPack\s*\(/).filter(o=>o.file.includes('services'));
 const usePackInApp = search(/\busePack\s*\(/).filter(o=>o.file.includes(path.join('app','')));

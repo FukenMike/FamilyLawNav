@@ -91,6 +91,8 @@
 - /home/michael/Desktop/FamilyLawNav/services/packStore.ts:315 -> const v = validateStatePack(payload.pack)
 - /home/michael/Desktop/FamilyLawNav/services/packStore.ts:393 -> const v = validateStatePack(pack)
 - /home/michael/Desktop/FamilyLawNav/services/packStore.ts:464 -> const v2 = validateStatePack(adapted)
+- /home/michael/Desktop/FamilyLawNav/tools/pack-builder/buildPack.js:226 -> function validatePack(p) {
+- /home/michael/Desktop/FamilyLawNav/tools/pack-builder/index.js:15 -> const validation = validatePack(pack);
 
 ### Seed pack fallback
 
@@ -120,6 +122,23 @@
 
 ### Crawler/ingest
 
+## Pack Builder Pipeline
+
+- package.json contains script "build:packs"
+- /home/michael/Desktop/FamilyLawNav/tools/pack-builder/index.js exists
+- /home/michael/Desktop/FamilyLawNav/tools/pack-builder/config.js exists
+- public/packs exists
+- manifest.json exists
+  - schemaVersion: 1
+  - pack entries: 2
+  - state GA: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-24T20:07:40.055Z
+  - state AL: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-24T20:07:40.069Z
+- pack file reconciliation: missing none, extra AK,AR,AZ,CA,CO,CT,DC,DE,FL,HI,IA,ID,IL,IN,KS,KY,LA,MA,MD,ME,MI,MN,MO,MS,MT,NC,ND,NE,NH,NJ,NM,NV,NY,OH,OK,OR,PA,RI,SC,SD,TN,TX,UT,VA,VT,WA,WI,WV,WY
+- could not load pack-builder config for source coverage
 
 ## Redundancy Counts
 - getPack in app/: 0
@@ -130,7 +149,7 @@
 ## Duplicate Imports
 
 ## Reachability Map
-- total files scanned: 79
+- total files scanned: 85
 - total reachable files: 69
 - reachable service files (8):
   - services/SeedSearchProvider.ts

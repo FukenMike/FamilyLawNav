@@ -1,134 +1,414 @@
 {
-  "quality": "curated",
-  "schemaVersion": "1",
   "state": "AL",
-  "packVersion": "2026.02.21",
+  "schemaVersion": "1",
+  "packVersion": "2026-02-24T20:07:40.069Z",
+  "jurisdiction_sources": {
+    "official_code": "",
+    "judiciary_rules": "",
+    "judiciary_forms": "",
+    "opinions_search": "",
+    "legal_aid_portal": ""
+  },
   "domains": [
     {
+      "id": "divorce",
+      "label": "divorce",
+      "status": "partial",
+      "issues": [
+        {
+          "id": "divorce_grounds",
+          "label": "divorce_grounds",
+          "summary": "",
+          "authorities": [
+            "al-divorce-grounds",
+            "al-divorce-forms"
+          ],
+          "legal_tests": [],
+          "procedural_traps": [],
+          "forms_and_guides": [],
+          "notes": "",
+          "needs_verification": false
+        },
+        {
+          "id": "custody_best_interest",
+          "label": "custody_best_interest",
+          "summary": "",
+          "authorities": [
+            "al-divorce-forms"
+          ],
+          "legal_tests": [],
+          "procedural_traps": [],
+          "forms_and_guides": [],
+          "notes": "",
+          "needs_verification": false
+        },
+        {
+          "id": "support_guidelines",
+          "label": "support_guidelines",
+          "summary": "",
+          "authorities": [
+            "al-divorce-forms"
+          ],
+          "legal_tests": [],
+          "procedural_traps": [],
+          "forms_and_guides": [],
+          "notes": "",
+          "needs_verification": false
+        }
+      ]
+    },
+    {
       "id": "custody",
-      "label": "Custody",
-      "description": "Who will have physical/legal custody of the child?"
+      "label": "custody",
+      "status": "partial",
+      "issues": [
+        {
+          "id": "custody_best_interest",
+          "label": "custody_best_interest",
+          "summary": "",
+          "authorities": [
+            "al-custody-general"
+          ],
+          "legal_tests": [],
+          "procedural_traps": [],
+          "forms_and_guides": [],
+          "notes": "",
+          "needs_verification": false
+        }
+      ]
     },
     {
-      "id": "child_support",
-      "label": "Child Support",
-      "description": "Financial support for the child."
+      "id": "support",
+      "label": "support",
+      "status": "partial",
+      "issues": [
+        {
+          "id": "support_guidelines",
+          "label": "support_guidelines",
+          "summary": "",
+          "authorities": [
+            "al-support-guidelines"
+          ],
+          "legal_tests": [],
+          "procedural_traps": [],
+          "forms_and_guides": [],
+          "notes": "",
+          "needs_verification": false
+        }
+      ]
     },
     {
-      "id": "dependency_tpr",
-      "label": "Dependency/TPR",
-      "description": "Dependency cases and termination of parental rights."
+      "id": "paternity",
+      "label": "paternity",
+      "status": "partial",
+      "issues": [
+        {
+          "id": "paternity_establish",
+          "label": "paternity_establish",
+          "summary": "",
+          "authorities": [
+            "al-paternity"
+          ],
+          "legal_tests": [],
+          "procedural_traps": [],
+          "forms_and_guides": [],
+          "notes": "",
+          "needs_verification": false
+        }
+      ]
     },
     {
-      "id": "domestic_violence",
-      "label": "Domestic Violence",
-      "description": "Protective orders and related issues."
-    },
-    {
-      "id": "procedure",
-      "label": "Procedure",
-      "description": "Court procedural requirements."
+      "id": "protection_orders",
+      "label": "protection_orders",
+      "status": "partial",
+      "issues": [
+        {
+          "id": "pfa_process",
+          "label": "pfa_process",
+          "summary": "",
+          "authorities": [
+            "al-pfa"
+          ],
+          "legal_tests": [],
+          "procedural_traps": [],
+          "forms_and_guides": [],
+          "notes": "",
+          "needs_verification": false
+        }
+      ]
     },
     {
       "id": "service_notice",
-      "label": "Service & Notice",
-      "description": "Proper service and notice of documents."
+      "label": "service_notice",
+      "status": "partial",
+      "issues": [
+        {
+          "id": "service_rules",
+          "label": "service_rules",
+          "summary": "",
+          "authorities": [
+            "al-service-rules"
+          ],
+          "legal_tests": [],
+          "procedural_traps": [],
+          "forms_and_guides": [],
+          "notes": "",
+          "needs_verification": false
+        }
+      ]
     },
     {
-      "id": "venue_jurisdiction",
-      "label": "Venue & Jurisdiction",
-      "description": "Where the case can be filed."
+      "id": "procedure",
+      "label": "procedure",
+      "status": "partial",
+      "issues": [
+        {
+          "id": "appeals_deadlines",
+          "label": "appeals_deadlines",
+          "summary": "",
+          "authorities": [
+            "al-appeals"
+          ],
+          "legal_tests": [],
+          "procedural_traps": [],
+          "forms_and_guides": [],
+          "notes": "",
+          "needs_verification": false
+        }
+      ]
     },
     {
-      "id": "appeals",
-      "label": "Appeals",
-      "description": "Post‑trial appeals."
+      "id": "enforcement",
+      "label": "enforcement",
+      "status": "partial",
+      "issues": [
+        {
+          "id": "contempt",
+          "label": "contempt",
+          "summary": "",
+          "authorities": [
+            "al-contempt"
+          ],
+          "legal_tests": [],
+          "procedural_traps": [],
+          "forms_and_guides": [],
+          "notes": "",
+          "needs_verification": false
+        }
+      ]
+    },
+    {
+      "id": "general",
+      "label": "general",
+      "status": "partial",
+      "issues": [
+        {
+          "id": "divorce_grounds",
+          "label": "Grounds for divorce",
+          "summary": "",
+          "authorities": [],
+          "legal_tests": [],
+          "procedural_traps": [],
+          "forms_and_guides": [],
+          "notes": "",
+          "needs_verification": false
+        },
+        {
+          "id": "divorce_property",
+          "label": "Property division / alimony basics",
+          "summary": "",
+          "authorities": [],
+          "legal_tests": [],
+          "procedural_traps": [],
+          "forms_and_guides": [],
+          "notes": "",
+          "needs_verification": false
+        },
+        {
+          "id": "custody_best_interest",
+          "label": "Best-interest factors",
+          "summary": "",
+          "authorities": [],
+          "legal_tests": [],
+          "procedural_traps": [],
+          "forms_and_guides": [],
+          "notes": "",
+          "needs_verification": false
+        },
+        {
+          "id": "custody_modification",
+          "label": "Modification / relocation",
+          "summary": "",
+          "authorities": [],
+          "legal_tests": [],
+          "procedural_traps": [],
+          "forms_and_guides": [],
+          "notes": "",
+          "needs_verification": false
+        },
+        {
+          "id": "support_guidelines",
+          "label": "Guidelines / worksheets",
+          "summary": "",
+          "authorities": [],
+          "legal_tests": [],
+          "procedural_traps": [],
+          "forms_and_guides": [],
+          "notes": "",
+          "needs_verification": false
+        },
+        {
+          "id": "support_deviation",
+          "label": "Deviation / imputation",
+          "summary": "",
+          "authorities": [],
+          "legal_tests": [],
+          "procedural_traps": [],
+          "forms_and_guides": [],
+          "notes": "",
+          "needs_verification": false
+        },
+        {
+          "id": "paternity_establish",
+          "label": "Establishing paternity",
+          "summary": "",
+          "authorities": [],
+          "legal_tests": [],
+          "procedural_traps": [],
+          "forms_and_guides": [],
+          "notes": "",
+          "needs_verification": false
+        },
+        {
+          "id": "pfa_process",
+          "label": "PFA filing + hearing process",
+          "summary": "",
+          "authorities": [],
+          "legal_tests": [],
+          "procedural_traps": [],
+          "forms_and_guides": [],
+          "notes": "",
+          "needs_verification": false
+        },
+        {
+          "id": "service_rules",
+          "label": "Service rules + alternative service",
+          "summary": "",
+          "authorities": [],
+          "legal_tests": [],
+          "procedural_traps": [],
+          "forms_and_guides": [],
+          "notes": "",
+          "needs_verification": false
+        },
+        {
+          "id": "appeals_deadlines",
+          "label": "Appeals + key deadlines",
+          "summary": "",
+          "authorities": [],
+          "legal_tests": [],
+          "procedural_traps": [],
+          "forms_and_guides": [],
+          "notes": "",
+          "needs_verification": false
+        },
+        {
+          "id": "contempt",
+          "label": "Contempt / enforcement remedies",
+          "summary": "",
+          "authorities": [],
+          "legal_tests": [],
+          "procedural_traps": [],
+          "forms_and_guides": [],
+          "notes": "",
+          "needs_verification": false
+        }
+      ]
     }
   ],
-  "issues": [
-    {
-      "id": "custody_initial",
-      "domainId": "custody",
-      "label": "Initial Custody Determination"
+  "authorities": {
+    "al-divorce-grounds": {
+      "kind": "statute",
+      "title": "Grounds for divorce",
+      "source_url": "https://alisondb.legislature.state.al.us",
+      "notes": "Lists statutory grounds for divorce."
     },
-    {
-      "id": "custody_modification",
-      "domainId": "custody",
-      "label": "Custody Modification"
+    "al-custody-general": {
+      "kind": "statute",
+      "title": "Custody & visitation general provisions",
+      "source_url": "https://alisondb.legislature.state.al.us",
+      "notes": "Starting point for AL custody/visitation statutes (replace with specific sections)."
     },
-    {
-      "id": "child_support_order",
-      "domainId": "child_support",
-      "label": "Child Support Order"
+    "al-support-guidelines": {
+      "kind": "rule",
+      "title": "Child Support Guidelines / worksheets",
+      "source_url": "",
+      "notes": "Guidelines authority for calculating child support (link to official PDF/page)."
     },
-    {
-      "id": "emergency_custody",
-      "domainId": "custody",
-      "label": "Emergency Custody"
+    "al-paternity": {
+      "kind": "statute",
+      "title": "Paternity / parentage",
+      "source_url": "https://alisondb.legislature.state.al.us",
+      "notes": "Starting point for AL parentage statutes (replace with specific sections)."
+    },
+    "al-pfa": {
+      "kind": "statute",
+      "title": "Protection from Abuse (PFA) process",
+      "source_url": "https://alisondb.legislature.state.al.us",
+      "notes": "Statutory basis for PFA petitions, hearings, and relief."
+    },
+    "al-service-rules": {
+      "kind": "rule",
+      "title": "Service of process rules",
+      "source_url": "",
+      "notes": "Service requirements and alternative service options."
+    },
+    "al-appeals": {
+      "kind": "rule",
+      "title": "Appeals & deadlines",
+      "source_url": "",
+      "notes": "Appellate deadlines and procedures (link official rules)."
+    },
+    "al-divorce-forms": {
+      "kind": "form",
+      "title": "Divorce / custody / support forms (official)",
+      "source_url": "",
+      "notes": "Official or widely-used court forms/self-help portal."
+    },
+    "al-contempt": {
+      "kind": "guide",
+      "title": "Enforcement & contempt basics",
+      "source_url": "",
+      "notes": "High-level enforcement entrypoint (replace with official guidance/court resources)."
     }
-  ],
-  "intakeQuestions": [
-    {
-      "id": "q1",
-      "domainId": "custody",
-      "prompt": "Are you seeking an initial custody order?",
-      "type": "boolean",
-      "issueId": "custody_initial"
-    },
-    {
-      "id": "q2",
-      "domainId": "custody",
-      "prompt": "Do you need to modify an existing order?",
-      "type": "boolean",
-      "issueId": "custody_modification"
-    },
-    {
-      "id": "q3",
-      "domainId": "child_support",
-      "prompt": "Is a child support order required?",
-      "type": "boolean",
-      "issueId": "child_support_order"
-    }
-  ],
-  "testItems": [
-    {
-      "id": "test_custody_initial",
-      "issueId": "custody_initial",
-      "label": "Best Interest of Child"
-    },
-    {
-      "id": "test_custody_modification",
-      "issueId": "custody_modification",
-      "label": "Material Change in Circumstances"
-    }
-  ],
-  "authorities": {},
-  "issueAuthorities": [],
-  "proceduralTraps": [],
-  "gaps": [
-    {
-      "domainId": "custody",
-      "issueId": "custody_initial",
-      "message": "Authorities not populated yet"
-    },
-    {
-      "domainId": "custody",
-      "issueId": "custody_modification",
-      "message": "Authorities not populated yet"
-    },
-    {
-      "domainId": "child_support",
-      "issueId": "child_support_order",
-      "message": "Authorities not populated yet"
-    },
-    {
-      "domainId": "custody",
-      "issueId": "emergency_custody",
-      "message": "Authorities not populated yet"
-    }
-  ],
-  "metadata": {
-    "level": "baseline",
-    "generatedAt": "2026-02-21T06:08:49.373Z"
+  },
+  "authoritiesByIssue": {
+    "divorce_grounds": [
+      "al-divorce-grounds",
+      "al-divorce-forms"
+    ],
+    "custody_best_interest": [
+      "al-custody-general",
+      "al-divorce-forms"
+    ],
+    "support_guidelines": [
+      "al-support-guidelines",
+      "al-divorce-forms"
+    ],
+    "paternity_establish": [
+      "al-paternity"
+    ],
+    "pfa_process": [
+      "al-pfa"
+    ],
+    "service_rules": [
+      "al-service-rules"
+    ],
+    "appeals_deadlines": [
+      "al-appeals"
+    ],
+    "contempt": [
+      "al-contempt"
+    ]
   }
 }
