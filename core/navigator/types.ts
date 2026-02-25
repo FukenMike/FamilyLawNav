@@ -27,6 +27,20 @@ export interface TestItem {
   notes?: string;
 }
 
+export interface ResearchTarget {
+  label: string;
+  url: string;
+  keywords: string[];
+  notes?: string;
+}
+
+export interface IssueReasoning {
+  why: string;
+  rulePath: string[];
+  nextSteps: string[];
+  researchTargets: ResearchTarget[];
+}
+
 export type IntakeQuestionType = "boolean" | "single" | "multi" | "text";
 
 export interface IntakeQuestion {
@@ -74,4 +88,12 @@ export interface NavigatorOutput {
   trapsByIssue: Record<string, ProceduralTrap[]>;
   lastUpdated?: string;
   gaps?: string[];
+  reasoningByIssue?: Record<string, IssueReasoning>;
+  researchSeeds?: {
+    official_code?: string;
+    judiciary_rules?: string;
+    judiciary_forms?: string;
+    opinions_search?: string;
+    legal_aid_portal?: string;
+  };
 }

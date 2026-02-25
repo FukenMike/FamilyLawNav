@@ -238,6 +238,26 @@ export default function NavigatorScreen() {
               {(output.trapsByIssue[issue.issueId] || []).map((t, i) => (
                 <Text key={i} style={styles.value}>{t.label} ({t.severity})</Text>
               ))}
+
+              {/* Reasoning */}
+              {output.reasoningByIssue && output.reasoningByIssue[issue.issueId] && (
+                <View style={styles.reasoningBlock}>
+                  <Text style={styles.subLabel}>Reasoning</Text>
+                  <Text style={styles.value}>{output.reasoningByIssue[issue.issueId].why}</Text>
+                  <Text style={styles.value}>Path: {output.reasoningByIssue[issue.issueId].rulePath.join(' > ')}</Text>
+                  <Text style={styles.subLabel}>Next steps</Text>
+                  {output.reasoningByIssue[issue.issueId].nextSteps.map((ns, ni) => (
+                    <Text key={ni} style={styles.value}>- {ns}</Text>
+                  ))}
+                  <Text style={styles.subLabel}>Research plan</Text>
+                  {output.reasoningByIssue[issue.issueId].researchTargets.map((rt, ri) => (
+                    <Text key={ri} style={styles.value}>
+                      {rt.label}: {rt.url ? rt.url : 'missing in pack'}
+                      {rt.keywords && rt.keywords.length ? ` (keywords: ${rt.keywords.join(', ')})` : ''}
+                    </Text>
+                  ))}
+                </View>
+              )}
             </View>
           );
         })}
@@ -308,6 +328,12 @@ const styles = StyleSheet.create({
   domainBtnTextActive: {
     color: "#fff",
     fontWeight: "bold",
+  },
+  reasoningBlock: {
+    marginTop: 8,
+    padding: 8,
+    backgroundColor: '#f0f8ff',
+    borderRadius: 4,
   },
   section: {
     marginTop: 18,
