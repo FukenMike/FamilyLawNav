@@ -3,6 +3,12 @@
  */
 
 module.exports = {
+  jurisdiction_sources: {
+    official_code: "https://law.justia.com/codes/alabama/",
+    judiciary_rules: "https://www.alacourt.gov/",
+    judiciary_forms: "",
+    opinions_search: "https://www.law.cornell.edu/states/alabama",
+  },
   domains: [
     { id: "divorce", label: "Divorce" },
     { id: "custody", label: "Custody & Visitation" },

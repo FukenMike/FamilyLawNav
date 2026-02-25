@@ -1,5 +1,13 @@
 # Architecture Audit Report
 
+## Build Guards (repo scripts)
+- npx tsc --noEmit
+- npm run check:routes
+- npm run check:packs
+- npm run check:env
+- npm run check:todos
+- npm run audit:arch
+
 ## A. App Entry + Navigation
 
 **Route tree under `app/`:**
@@ -24,7 +32,7 @@
 ### Screen: app/(tabs)/navigator.tsx
 - imports: @/core/navigator/types, @/services/authorityIdHelpers, @/services/navigatorService, @/services/packStore, expo-router, react, react-native
 - hooks: useState, useEffect, useRouter, usePack
-- call-like invocations: Date, NavigatorScreen, async, catch, create, encodeAuthorityId, filter, find, flatMap, floor, getItem, if, isArray, isNaN, join, map, now, parse, push, refresh, return, runNavigatorWithPack, setAnswers, setDomainId, setGap, setItem, setLoading, setOutput, setQuestions, setRefreshBusy, setState, timeSince, toLocaleDateString, useEffect, usePack, useRouter, useState
+- call-like invocations: Date, NavigatorScreen, async, catch, create, encodeAuthorityId, filter, find, flatMap, floor, getItem, if, isArray, isNaN, join, map, now, parse, push, refresh, return, round, runNavigatorWithPack, setAnswers, setDomainId, setGap, setItem, setLoading, setOutput, setQuestions, setRefreshBusy, setState, timeSince, toLocaleDateString, useEffect, usePack, useRouter, useState
 - store hooks: 
 - navigation uses: router.push
 
@@ -120,7 +128,11 @@
 - /home/michael/Desktop/FamilyLawNav/app/resource/[id].tsx:119 -> const res = await summarizeAuthority(text || '');
 - /home/michael/Desktop/FamilyLawNav/services/aiService.ts:3 -> export async function summarizeAuthority(authorityText: string): Promise<string> {
 
-### Crawler/ingest
+### Crawler/ingest (status)
+- In-app crawling not implemented.
+- Current ingestion path is Pack Builder: `npm run build:packs` → tools/pack-builder → public/packs + manifest.json
+- Seed/discovery sources are intended to live in `pack.jurisdiction_sources` (statutes index, judiciary rules/forms, opinions search).
+- External crawler can be added later without changing UI/engine contracts.
 
 ## Pack Builder Pipeline
 

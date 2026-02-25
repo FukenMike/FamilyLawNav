@@ -1,5 +1,6 @@
 const path = require('path');
-
+// no TypeScript loader or runtime dependency on data/statePacks.  sources/*
+// are the authoritative ingestion mechanism.
 // allowed family-law domains
 const ALLOWED_DOMAINS = new Set([
   'divorce',
@@ -37,6 +38,7 @@ function makeDefaultJurisdictions() {
   };
 }
 
+
 // slug helper for deterministic ids
 function slugify(text) {
   return String(text || '')
@@ -72,131 +74,130 @@ function checkAllowedDomain(id, state) {
 
 function buildPackForState(state) {
   const src = loadSource(state);
-  if (!src) return null;
-
-  // validate declared domains
-  if (Array.isArray(src.domains)) {
-    src.domains.forEach((d) => {
-      if (d && d.id) checkAllowedDomain(d.id, state);
-    });
-  }
-  if (Array.isArray(src.issues)) {
-    src.issues.forEach((i) => {
-      if (i && i.domainId) checkAllowedDomain(i.domainId, state);
-    });
-  }
-
   const packVersion = new Date().toISOString();
   const authorities = {};
   const domainsMap = {};
   const authoritiesByIssue = {};
 
-  const authList = Array.isArray(src.authorities) ? src.authorities : [];
+  if (src) {
+    // validate declared domains/issues
+    if (Array.isArray(src.domains)) {
+      src.domains.forEach((d) => {
+        if (d && d.id) checkAllowedDomain(d.id, state);
+      });
+    }
+    if (Array.isArray(src.issues)) {
+      src.issues.forEach((i) => {
+        if (i && i.domainId) checkAllowedDomain(i.domainId, state);
+      });
+    }
 
-  authList.forEach((srcEntry) => {
-    const id = deriveAuthId(state, srcEntry);
-    const kind = srcEntry.kind || 'statute';
-    authorities[id] = {
-      kind,
-      title: srcEntry.title || '',
-      source_url: srcEntry.source_url || '',
-      notes: srcEntry.short_summary || srcEntry.notes || '',
-    };
+    const authList = Array.isArray(src.authorities) ? src.authorities : [];
+    authList.forEach((srcEntry) => {
+      const id = deriveAuthId(state, srcEntry);
+      const kind = srcEntry.kind || 'statute';
+      authorities[id] = {
+        kind,
+        title: srcEntry.title || '',
+        source_url: srcEntry.source_url || '',
+        notes: srcEntry.short_summary || srcEntry.notes || '',
+      };
 
-    const relevantDomains = Array.isArray(srcEntry.domains) && srcEntry.domains.length ? srcEntry.domains : ['general'];
-    relevantDomains.forEach((d) => {
-      if (d) checkAllowedDomain(d, state);
+      const relevantDomains = Array.isArray(srcEntry.domains) && srcEntry.domains.length ? srcEntry.domains : ['general'];
+      relevantDomains.forEach((d) => {
+        if (d) checkAllowedDomain(d, state);
+      });
+      const relevantIssues = Array.isArray(srcEntry.issues) && srcEntry.issues.length ? srcEntry.issues : [];
+
+      relevantIssues.forEach((issueId) => {
+        if (!authoritiesByIssue[issueId]) authoritiesByIssue[issueId] = [];
+        if (!authoritiesByIssue[issueId].includes(id)) authoritiesByIssue[issueId].push(id);
+
+        const domainId = relevantDomains[0] || 'general';
+        if (!domainsMap[domainId]) {
+          domainsMap[domainId] = {
+            id: domainId,
+            label: domainId,
+            status: 'partial',
+            issues: {},
+          };
+        }
+        const domain = domainsMap[domainId];
+        if (!domain.issues[issueId]) {
+          domain.issues[issueId] = {
+            id: issueId,
+            label: issueId,
+            summary: '',
+            authorities: [],
+            legal_tests: [],
+            procedural_traps: [],
+            forms_and_guides: [],
+            notes: '',
+            needs_verification: false,
+          };
+        }
+        if (!domain.issues[issueId].authorities.includes(id)) {
+          domain.issues[issueId].authorities.push(id);
+        }
+      });
     });
-    const relevantIssues = Array.isArray(srcEntry.issues) && srcEntry.issues.length ? srcEntry.issues : [];
 
-    relevantIssues.forEach((issueId) => {
-      if (!authoritiesByIssue[issueId]) authoritiesByIssue[issueId] = [];
-      if (!authoritiesByIssue[issueId].includes(id)) authoritiesByIssue[issueId].push(id);
+    // merge any declared domains from src
+    if (Array.isArray(src.domains)) {
+      src.domains.forEach((d) => {
+        const did = d.id || d.label || 'unknown';
+        if (!domainsMap[did]) {
+          domainsMap[did] = {
+            id: did,
+            label: d.label || did,
+            status: d.status || 'empty',
+            issues: {},
+          };
+        }
+        const mapDom = domainsMap[did];
+        (Array.isArray(d.issues) ? d.issues : []).forEach((i) => {
+          const iid = i.id || i.label || 'unknown';
+          if (!mapDom.issues[iid]) {
+            mapDom.issues[iid] = {
+              id: iid,
+              label: i.label || iid,
+              summary: i.summary || '',
+              authorities: Array.isArray(i.authorities) ? [...i.authorities] : [],
+              legal_tests: Array.isArray(i.legal_tests) ? [...i.legal_tests] : [],
+              procedural_traps: Array.isArray(i.procedural_traps) ? [...i.procedural_traps] : [],
+              forms_and_guides: Array.isArray(i.forms_and_guides) ? [...i.forms_and_guides] : [],
+              notes: i.notes || '',
+              needs_verification: !!i.needs_verification,
+            };
+          }
+        });
+      });
+    }
 
-      const domainId = relevantDomains[0] || 'general';
+    // optional issues list
+    if (Array.isArray(src.issues)) {
+      const domainId = 'general';
       if (!domainsMap[domainId]) {
-        domainsMap[domainId] = {
-          id: domainId,
-          label: domainId,
-          status: 'partial',
-          issues: {},
-        };
+        domainsMap[domainId] = { id: domainId, label: domainId, status: 'partial', issues: {} };
       }
-      const domain = domainsMap[domainId];
-      if (!domain.issues[issueId]) {
-        domain.issues[issueId] = {
-          id: issueId,
-          label: issueId,
-          summary: '',
-          authorities: [],
-          legal_tests: [],
-          procedural_traps: [],
-          forms_and_guides: [],
-          notes: '',
-          needs_verification: false,
-        };
-      }
-      if (!domain.issues[issueId].authorities.includes(id)) {
-        domain.issues[issueId].authorities.push(id);
-      }
-    });
-  });
-
-  // merge any declared domains from source
-  if (Array.isArray(src.domains)) {
-    src.domains.forEach((d) => {
-      const did = d.id || d.label || 'unknown';
-      if (!domainsMap[did]) {
-        domainsMap[did] = {
-          id: did,
-          label: d.label || did,
-          status: d.status || 'empty',
-          issues: {},
-        };
-      }
-      const mapDom = domainsMap[did];
-      (Array.isArray(d.issues) ? d.issues : []).forEach((i) => {
+      const genDom = domainsMap[domainId];
+      src.issues.forEach((i) => {
         const iid = i.id || i.label || 'unknown';
-        if (!mapDom.issues[iid]) {
-          mapDom.issues[iid] = {
+        if (!genDom.issues[iid]) {
+          genDom.issues[iid] = {
             id: iid,
             label: i.label || iid,
             summary: i.summary || '',
             authorities: Array.isArray(i.authorities) ? [...i.authorities] : [],
-            legal_tests: Array.isArray(i.legal_tests) ? [...i.legal_tests] : [],
-            procedural_traps: Array.isArray(i.procedural_traps) ? [...i.procedural_traps] : [],
-            forms_and_guides: Array.isArray(i.forms_and_guides) ? [...i.forms_and_guides] : [],
+            legal_tests: [],
+            procedural_traps: [],
+            forms_and_guides: [],
             notes: i.notes || '',
             needs_verification: !!i.needs_verification,
           };
         }
       });
-    });
-  }
-
-  // optional issues list (without domains) placed under 'general'
-  if (Array.isArray(src.issues)) {
-    const domainId = 'general';
-    if (!domainsMap[domainId]) {
-      domainsMap[domainId] = { id: domainId, label: domainId, status: 'partial', issues: {} };
     }
-    const genDom = domainsMap[domainId];
-    src.issues.forEach((i) => {
-      const iid = i.id || i.label || 'unknown';
-      if (!genDom.issues[iid]) {
-        genDom.issues[iid] = {
-          id: iid,
-          label: i.label || iid,
-          summary: i.summary || '',
-          authorities: Array.isArray(i.authorities) ? [...i.authorities] : [],
-          legal_tests: [],
-          procedural_traps: [],
-          forms_and_guides: [],
-          notes: i.notes || '',
-          needs_verification: !!i.needs_verification,
-        };
-      }
-    });
   }
 
   const domains = Object.values(domainsMap).map((d) => ({
@@ -215,10 +216,18 @@ function buildPackForState(state) {
     authorities,
   };
 
-  if (Object.keys(authoritiesByIssue).length) pack.authoritiesByIssue = authoritiesByIssue;
-  if (Array.isArray(src.legalTests)) pack.legalTests = src.legalTests;
-  if (Array.isArray(src.testItems)) pack.testItems = src.testItems;
-  if (Array.isArray(src.traps)) pack.traps = src.traps;
+  if (src) {
+    const seeds = src.jurisdiction_sources || src.jurisdictions_sources || {};
+    pack.jurisdiction_sources.official_code = seeds.official_code || seeds.code || '';
+    pack.jurisdiction_sources.judiciary_rules = seeds.judiciary_rules || seeds.rules || '';
+    pack.jurisdiction_sources.judiciary_forms = seeds.judiciary_forms || seeds.forms || '';
+    pack.jurisdiction_sources.opinions_search = seeds.opinions_search || seeds.opinions || '';
+    if (src.authoritiesByIssue) pack.authoritiesByIssue = src.authoritiesByIssue;
+    if (src.issues) pack.issues = src.issues;
+    if (Array.isArray(src.legalTests)) pack.legalTests = src.legalTests;
+    if (Array.isArray(src.testItems)) pack.testItems = src.testItems;
+    if (Array.isArray(src.traps)) pack.traps = src.traps;
+  }
 
   return pack;
 }

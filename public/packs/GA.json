@@ -1,12 +1,12 @@
 {
   "state": "GA",
   "schemaVersion": "1",
-  "packVersion": "2026-02-25T01:52:17.975Z",
+  "packVersion": "2026-02-25T03:48:50.881Z",
   "jurisdiction_sources": {
-    "official_code": "",
-    "judiciary_rules": "",
+    "official_code": "https://law.justia.com/codes/georgia/",
+    "judiciary_rules": "https://www.georgiacourts.gov/",
     "judiciary_forms": "",
-    "opinions_search": "",
+    "opinions_search": "https://www.law.cornell.edu/states/georgia",
     "legal_aid_portal": ""
   },
   "domains": [
@@ -219,31 +219,5 @@
       "source_url": "",
       "notes": "Court defines \"domestic violence\" under statute."
     }
-  },
-  "authoritiesByIssue": {
-    "marriage": [
-      "ga-stat-1"
-    ],
-    "divorce": [
-      "ga-stat-2",
-      "ga-form-1"
-    ],
-    "support": [
-      "ga-case-1",
-      "ga-stat-4"
-    ],
-    "custody": [
-      "ga-rule-1",
-      "ga-guide-1"
-    ],
-    "jurisdiction": [
-      "ga-stat-3"
-    ],
-    "adoption": [
-      "ga-case-2"
-    ],
-    "domestic_violence": [
-      "ga-case-3"
-    ]
   }
 }

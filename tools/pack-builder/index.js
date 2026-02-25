@@ -8,10 +8,6 @@ async function run() {
 
   for (const state of STATES) {
     const pack = buildPackForState(state);
-    if (!pack) {
-      // already logged by loader
-      continue;
-    }
     const validation = validatePack(pack);
     if (!validation.ok) {
       console.error(`pack validation failed for ${state}:`, validation.error);

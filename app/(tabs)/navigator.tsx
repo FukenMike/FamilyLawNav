@@ -204,7 +204,7 @@ export default function NavigatorScreen() {
                 {issueMeta?.needs_verification && (
                   <Text style={[styles.value, { color: '#b00' }]}>Needs verification</Text>
                 )}
-                <Text style={styles.value}>Confidence: {issue.confidence}</Text>
+                <Text style={styles.value}>Confidence: {Math.round(issue.confidence * 100)}%</Text>
                 <Text style={styles.value}>Reasons: {issue.reasons.join(", ")}</Text>
                 {/* Authorities */}
                 <Text style={styles.subLabel}>Authorities:</Text>
@@ -244,6 +244,7 @@ export default function NavigatorScreen() {
                 <View style={styles.reasoningBlock}>
                   <Text style={styles.subLabel}>Reasoning</Text>
                   <Text style={styles.value}>{output.reasoningByIssue[issue.issueId].why}</Text>
+                  <Text style={styles.value}>Confidence: {Math.round(output.reasoningByIssue[issue.issueId].confidence * 100)}%</Text>
                   <Text style={styles.value}>Path: {output.reasoningByIssue[issue.issueId].rulePath.join(' > ')}</Text>
                   <Text style={styles.subLabel}>Next steps</Text>
                   {output.reasoningByIssue[issue.issueId].nextSteps.map((ns, ni) => (

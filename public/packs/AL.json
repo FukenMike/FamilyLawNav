@@ -1,12 +1,12 @@
 {
   "state": "AL",
   "schemaVersion": "1",
-  "packVersion": "2026-02-25T01:52:17.994Z",
+  "packVersion": "2026-02-25T03:48:50.860Z",
   "jurisdiction_sources": {
-    "official_code": "",
-    "judiciary_rules": "",
+    "official_code": "https://law.justia.com/codes/alabama/",
+    "judiciary_rules": "https://www.alacourt.gov/",
     "judiciary_forms": "",
-    "opinions_search": "",
+    "opinions_search": "https://www.law.cornell.edu/states/alabama",
     "legal_aid_portal": ""
   },
   "domains": [
@@ -382,33 +382,61 @@
       "notes": "High-level enforcement entrypoint (replace with official guidance/court resources)."
     }
   },
-  "authoritiesByIssue": {
-    "divorce_grounds": [
-      "al-divorce-grounds",
-      "al-divorce-forms"
-    ],
-    "custody_best_interest": [
-      "al-custody-general",
-      "al-divorce-forms"
-    ],
-    "support_guidelines": [
-      "al-support-guidelines",
-      "al-divorce-forms"
-    ],
-    "paternity_establish": [
-      "al-paternity"
-    ],
-    "pfa_process": [
-      "al-pfa"
-    ],
-    "service_rules": [
-      "al-service-rules"
-    ],
-    "appeals_deadlines": [
-      "al-appeals"
-    ],
-    "contempt": [
-      "al-contempt"
-    ]
-  }
+  "issues": [
+    {
+      "id": "divorce_grounds",
+      "label": "Grounds for divorce",
+      "domainId": "divorce"
+    },
+    {
+      "id": "divorce_property",
+      "label": "Property division / alimony basics",
+      "domainId": "divorce"
+    },
+    {
+      "id": "custody_best_interest",
+      "label": "Best-interest factors",
+      "domainId": "custody"
+    },
+    {
+      "id": "custody_modification",
+      "label": "Modification / relocation",
+      "domainId": "custody"
+    },
+    {
+      "id": "support_guidelines",
+      "label": "Guidelines / worksheets",
+      "domainId": "support"
+    },
+    {
+      "id": "support_deviation",
+      "label": "Deviation / imputation",
+      "domainId": "support"
+    },
+    {
+      "id": "paternity_establish",
+      "label": "Establishing paternity",
+      "domainId": "paternity"
+    },
+    {
+      "id": "pfa_process",
+      "label": "PFA filing + hearing process",
+      "domainId": "protection_orders"
+    },
+    {
+      "id": "service_rules",
+      "label": "Service rules + alternative service",
+      "domainId": "service_notice"
+    },
+    {
+      "id": "appeals_deadlines",
+      "label": "Appeals + key deadlines",
+      "domainId": "procedure"
+    },
+    {
+      "id": "contempt",
+      "label": "Contempt / enforcement remedies",
+      "domainId": "enforcement"
+    }
+  ]
 }

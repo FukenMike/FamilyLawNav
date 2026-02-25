@@ -21,43 +21,113 @@ export async function runNavigatorWithPack({ pack, domainId, answers }: RunNavig
     };
   }
 
+  // flatten all issues across domains for convenience
   const allIssues: any[] = Array.isArray(pack.domains)
     ? pack.domains.flatMap(d => Array.isArray(d.issues) ? d.issues : [])
     : [];
 
-  const detectedIssues: DetectedIssue[] = [];
-  const reasonsMap: Record<string,string[]> = {};
+  // normalize research seeds from pack.jurisdiction_sources
+  let researchSeeds: NavigatorOutput['researchSeeds'] | undefined;
+  if (pack.jurisdiction_sources && typeof pack.jurisdiction_sources === 'object') {
+    const js: Record<string,string> = pack.jurisdiction_sources as any;
+    const tmp: any = {};
+    if (js.official_code || js.code) tmp.official_code = js.official_code ?? js.code;
+    if (js.judiciary_rules || js.rules) tmp.judiciary_rules = js.judiciary_rules ?? js.rules;
+    if (js.judiciary_forms || js.forms) tmp.judiciary_forms = js.judiciary_forms ?? js.forms;
+    if (js.opinions_search || js.opinions) tmp.opinions_search = js.opinions_search ?? js.opinions;
+    if (Object.keys(tmp).length) researchSeeds = tmp;
+  }
 
-  // helper to score issues by keywords
-  const scoreIssue = (issue: any, keyword: string): number => {
-    const id = issue.id.toLowerCase();
-    return id.includes(keyword) ? 1 : 0;
+  // scoring buckets
+  const keywordBuckets: Record<string,string[]> = {
+    custody: [
+      'custody','visitation','parenting','schedule','best interest','relocate','relocation','emergency','ex parte','modify','modification','contempt',
+    ],
+    support: [
+      'child support','guidelines','income','arrears','deviation','modify','modification','contempt','enforcement',
+    ],
+    dependency: [
+      'dependency','dhr','cps','shelter','shelter care','reasonable efforts','isp','permanency','tpr','termination',
+    ],
+    procedure: [
+      'service','notice','motion','hearing','appeal','discovery','evidence',
+    ],
   };
 
-  // determine scoring from answers
-  let emergencyScore = 0, modScore = 0, initScore = 0;
-  answers.forEach(a => {
-    const q = a.questionId.toLowerCase();
-    const v = String(a.value).toLowerCase();
-    if (q.includes('q3') || v.includes('emergency')) emergencyScore += 1;
-    if (v.includes('material change') || v.includes('modification')) modScore += 1;
-    if (v.includes('initial') || v.includes('seeking initial')) initScore += 1;
-  });
+  // compile answer text
+  const answerText = answers.map(a => String(a.value).toLowerCase()).join(' ');
 
-  // apply detection rules across issues
-  allIssues.forEach(issue => {
+  // detect emergency/relocate/modify signals
+  const hasEmergency = answerText.includes('emergency') || answerText.includes('immediate danger');
+  const hasRelocate = answerText.includes('relocate') || answerText.includes('relocation');
+  const hasModify = answerText.includes('modify') || answerText.includes('modification') || answerText.includes('change');
+
+  // consider only issues in the requested domain
+  const domainIssues = allIssues.filter(i => i.domainId === domainId);
+
+  interface ScoreEntry { issue: any; score: number; reasons: string[]; }
+  const scored: ScoreEntry[] = [];
+
+  domainIssues.forEach(issue => {
     let score = 0;
-    if (emergencyScore && issue.id.toLowerCase().includes('emergency')) score += emergencyScore * 2;
-    if (modScore && issue.id.toLowerCase().includes('modification')) score += modScore * 1.5;
-    if (initScore && issue.id.toLowerCase().includes('initial')) score += initScore;
-    if (score > 0) {
-      detectedIssues.push({ issueId: issue.id, confidence: Math.min(1, score / 3), reasons: [] });
+    const reasons: string[] = [];
+
+    // keyword matches in answers
+    Object.values(keywordBuckets).flat().forEach(k => {
+      if (answerText.includes(k)) {
+        score += 1;
+        reasons.push(`answer contains '${k}'`);
+      }
+    });
+    // keyword matches in issue id/label
+    const iid = String(issue.id).toLowerCase();
+    const ilab = String(issue.label || '').toLowerCase();
+    Object.values(keywordBuckets).flat().forEach(k => {
+      if (iid.includes(k) || ilab.includes(k)) {
+        score += 0.5;
+        reasons.push(`issue metadata contains '${k}'`);
+      }
+    });
+
+    // special boosts
+    if (hasEmergency && (iid.includes('emergency') || ilab.includes('emergency'))) {
+      score += 5;
+      reasons.push('emergency signal matched');
     }
+    if (hasRelocate && (iid.includes('relocate') || ilab.includes('relocate'))) {
+      score += 4;
+      reasons.push('relocation signal matched');
+    }
+    if (hasModify && (iid.includes('modify') || ilab.includes('modify') || ilab.includes('modification'))) {
+      score += 3;
+      reasons.push('modification signal matched');
+    }
+
+    scored.push({ issue, score, reasons });
   });
 
-  // sort by confidence and keep top2
-  detectedIssues.sort((a,b)=>b.confidence-a.confidence);
-  const topIssues = detectedIssues.slice(0,2);
+  // sort by descending score
+  scored.sort((a,b)=>b.score - a.score);
+
+  // choose top two; if all zero, fallback to first two with minimal confidence
+  let selected: ScoreEntry[] = [];
+  if (scored.length === 0) {
+    selected = [];
+  } else if (scored[0].score === 0) {
+    selected = scored.slice(0,2);
+  } else {
+    selected = scored.slice(0,2);
+  }
+
+  const detectedIssues: DetectedIssue[] = selected.map(s => {
+    let confidence = s.score > 0 ? Math.min(1, s.score / 5) : 0.1;
+    if (confidence === 0) confidence = 0.1;
+    return {
+      issueId: s.issue.id,
+      confidence,
+      reasons: s.reasons.length ? s.reasons : ['no signals, default selection'],
+    };
+  });
 
   // prepare output containers
   const authoritiesByIssue: Record<string,string[]> = {};
@@ -65,59 +135,65 @@ export async function runNavigatorWithPack({ pack, domainId, answers }: RunNavig
   const trapsByIssue: Record<string, any[]> = {};
   const reasoningByIssue: Record<string, any> = {};
 
-  topIssues.forEach(issue => {
-    const issueObj = allIssues.find(i=>i.id===issue.issueId) || {};
-    const auths = Array.isArray(issueObj.authorities) ? issueObj.authorities : [];
-    const tests = Array.isArray(issueObj.legal_tests) ? issueObj.legal_tests : [];
-    const traps = Array.isArray(issueObj.procedural_traps) ? issueObj.procedural_traps : [];
-    authoritiesByIssue[issue.issueId] = auths;
-    testsByIssue[issue.issueId] = tests;
-    trapsByIssue[issue.issueId] = traps;
+  detectedIssues.forEach(det => {
+    const issue = domainIssues.find(i => i.id === det.issueId) || {};
+    const auths: string[] = (pack.authoritiesByIssue && pack.authoritiesByIssue[det.issueId]) || [];
+    const tests = Array.isArray(issue.legal_tests) ? issue.legal_tests : [];
+    const traps = Array.isArray(issue.procedural_traps) ? issue.procedural_traps : [];
 
-    // reasoning why
-    const whyParts: string[] = [];
-    whyParts.push(issueObj.label || issue.issueId);
-    if (tests.length) whyParts.push(`contains ${tests.length} legal test(s)`);
-    if (traps.length) whyParts.push(`contains ${traps.length} procedural trap(s)`);
-    if (auths.length) whyParts.push(`has ${auths.length} authorities`);
-    const whyText = whyParts.join('; ');
+    authoritiesByIssue[det.issueId] = auths;
+    testsByIssue[det.issueId] = tests;
+    trapsByIssue[det.issueId] = traps;
 
-    // rulePath
+    const whyText = `${issue.label || det.issueId}`;
+
     const rulePath = [
-      `Domain: ${issueObj.domainId||'?'}`,
-      `Issue: ${issue.issueId}`,
+      `Domain: ${domainId}`,
+      `Issue: ${det.issueId}`,
       `Tests: ${tests.length}`,
       `Traps: ${traps.length}`,
       `Authorities: ${auths.length}`,
     ];
 
-    // nextSteps
     const nextSteps: string[] = [];
-    if (tests.length) nextSteps.push('collect facts for test items / factors');
-    if (traps.length) nextSteps.push('avoid service/notice/venue issues');
-    if (auths.length) nextSteps.push('open and cite authorities');
+    nextSteps.push('Read the top authorities and save the ones you’ll cite.');
+    if (traps.length) {
+      const trapLabels = traps.map((t:any)=>t.label).slice(0,2);
+      nextSteps.push(`Watch for procedural traps (${trapLabels.join(', ')}).`);
+    }
+    if (tests.length) {
+      nextSteps.push('Gather facts for each factor/test item.');
+    }
+    if (researchSeeds) {
+      nextSteps.push('Verify current text using official code/rules/forms seeds.');
+    }
 
-    // research targets
     const researchTargets: ResearchTarget[] = [];
-    const src = pack.jurisdiction_sources || {} as Record<string,string>;
-    const fields: Array<keyof typeof src> = ['official_code','judiciary_rules','judiciary_forms','opinions_search','legal_aid_portal'];
-    fields.forEach(field=>{
-      if (src[field]) {
-        researchTargets.push({ label: field, url: src[field], keywords: [], notes: '' });
-      } else {
-        researchTargets.push({ label: field, url: '', keywords: [], notes: 'missing in pack' });
-      }
-    });
-    // domain-specific keywords
-    const domainKeywords: Record<string,string[]> = {
-      custody:['custody','visitation','parenting plan','best interest','modification','relocation','emergency'],
-      support:['child support','guidelines','income','deviation','arrears','contempt','modification'],
-      dependency:['dependency','juvenile court','shelter care','reasonable efforts','case plan','TPR','termination of parental rights'],
-    };
-    const kws = domainKeywords[issueObj.domainId]||[];
-    researchTargets.forEach((rt)=> { rt.keywords = kws; });
+    const categories = [
+      { key: 'official_code', label: 'Official code', sourceType: 'official_code' as const },
+      { key: 'judiciary_rules', label: 'Court rules', sourceType: 'judiciary_rules' as const },
+      { key: 'judiciary_forms', label: 'Forms/Self-help', sourceType: 'judiciary_forms' as const },
+      { key: 'opinions_search', label: 'Opinions search', sourceType: 'opinions_search' as const },
+    ];
+    // gather keywords for this domain/issue
+    const bucketKeywords = Object.values(keywordBuckets).flat();
+    const issueLabelTokens = String(issue.label || '').toLowerCase().split(/\s+/);
 
-    reasoningByIssue[issue.issueId] = {
+    categories.forEach(cat => {
+      const url = researchSeeds ? (researchSeeds as any)[cat.key] : undefined;
+      const notes = url ? undefined : 'Missing in pack; add to jurisdiction_sources.';
+      researchTargets.push({
+        label: cat.label,
+        url,
+        keywords: [...bucketKeywords, ...issueLabelTokens],
+        notes,
+        sourceType: cat.sourceType,
+      });
+    });
+
+    reasoningByIssue[det.issueId] = {
+      confidence: det.confidence,
+      reasons: det.reasons,
       why: whyText,
       rulePath,
       nextSteps,
@@ -128,15 +204,16 @@ export async function runNavigatorWithPack({ pack, domainId, answers }: RunNavig
   const output: NavigatorOutput = {
     state: pack.state,
     domainId,
-    detectedIssues: topIssues,
+    detectedIssues,
     authoritiesByIssue,
     testsByIssue,
     trapsByIssue,
     lastUpdated: new Date().toISOString(),
     gaps: [],
     reasoningByIssue,
-    researchSeeds: pack.jurisdiction_sources || {},
+    researchSeeds,
   };
+
   return output;
 }
 

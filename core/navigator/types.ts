@@ -29,13 +29,16 @@ export interface TestItem {
 
 export interface ResearchTarget {
   label: string;
-  url: string;
+  url?: string; // optional if missing in pack
   keywords: string[];
   notes?: string;
+  sourceType: 'official_code' | 'judiciary_rules' | 'judiciary_forms' | 'opinions_search' | 'other';
 }
 
 export interface IssueReasoning {
-  why: string;
+  confidence: number; // 0..1
+  reasons: string[];
+  why: string; // 1-3 sentences
   rulePath: string[];
   nextSteps: string[];
   researchTargets: ResearchTarget[];
@@ -94,6 +97,5 @@ export interface NavigatorOutput {
     judiciary_rules?: string;
     judiciary_forms?: string;
     opinions_search?: string;
-    legal_aid_portal?: string;
   };
 }

@@ -3,7 +3,7 @@ set -euo pipefail
 
 # recursively search for TODO or FIXME, excluding various directories
 
-matches=$(grep -R --line-number \
+matches=$(grep -RIn --line-number \
   --exclude-dir=node_modules \
   --exclude-dir=.expo \
   --exclude-dir=.git \
@@ -11,8 +11,10 @@ matches=$(grep -R --line-number \
   --exclude-dir=build \
   --exclude-dir=coverage \
   --exclude-dir=public/packs \
-  --exclude=docs/ARCH_AUDIT.md \
-  -E "TODO|FIXME" . || true)
+  --exclude=ARCH_AUDIT.md \
+  --exclude=audit-architecture.mjs \
+  --exclude=check-todos.sh \
+  -E "\b(TODO|FIXME)\b" . || true)
 
 if [ -n "$matches" ]; then
   echo "Found TODO/FIXME markers:"
