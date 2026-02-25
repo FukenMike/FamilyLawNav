@@ -2,11 +2,6 @@
 
 ## A. App Entry + Navigation
 
-> **Build Guards (repo scripts):** `npx tsc --noEmit`, `npm run check:routes`, `npm run check:packs`, `npm run check:env`, `npm run audit:arch`
->
-> **Audit generator:** `npm run audit:arch` (scripts/audit-architecture.mjs)
-
-
 **Route tree under `app/`:**
 
 - (tabs)/
@@ -125,12 +120,7 @@
 - /home/michael/Desktop/FamilyLawNav/app/resource/[id].tsx:119 -> const res = await summarizeAuthority(text || '');
 - /home/michael/Desktop/FamilyLawNav/services/aiService.ts:3 -> export async function summarizeAuthority(authorityText: string): Promise<string> {
 
-### Crawler/ingest (status)
-- In-app crawling not implemented.
-- Current ingestion path is Pack Builder: `npm run build:packs` → `tools/pack-builder` → `public/packs` + `manifest.json`
-- Seed/discovery sources are intended to live in `pack.jurisdiction_sources` (statutes index, judiciary rules/forms, opinions search).
-- External crawler can be added later without changing UI/engine contracts.
-
+### Crawler/ingest
 
 ## Pack Builder Pipeline
 
@@ -143,10 +133,10 @@
   - pack entries: 2
   - state GA: file exists
     - shape ok? true
-    - manifest packVersion: 2026-02-24T20:07:40.055Z
+    - manifest packVersion: 2026-02-25T01:52:17.975Z
   - state AL: file exists
     - shape ok? true
-    - manifest packVersion: 2026-02-24T20:07:40.069Z
+    - manifest packVersion: 2026-02-25T01:52:17.994Z
 - pack file reconciliation: missing none, extra AK,AR,AZ,CA,CO,CT,DC,DE,FL,HI,IA,ID,IL,IN,KS,KY,LA,MA,MD,ME,MI,MN,MO,MS,MT,NC,ND,NE,NH,NJ,NM,NV,NY,OH,OK,OR,PA,RI,SC,SD,TN,TX,UT,VA,VT,WA,WI,WV,WY
 - could not load pack-builder config for source coverage
 
@@ -157,6 +147,10 @@
 - getManifest in app/: 0
 
 ## Duplicate Imports
+
+## TODO/FIXME Report
+- total TODO: 0
+- total FIXME: 0
 
 ## Reachability Map
 - total files scanned: 85

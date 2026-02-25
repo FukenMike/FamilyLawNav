@@ -12,6 +12,7 @@
     "check:routes": "bash scripts/check-routes.sh",
     "check:packs": "bash scripts/check-packs.sh",
     "check:env": "bash scripts/check-env.sh",
+    "check:todos": "bash scripts/check-todos.sh",
     "gen:packs": "node scripts/generate-baseline-packs.js",
     "audit:arch": "node scripts/audit-architecture.mjs",
     "build:packs": "node tools/pack-builder/index.js"

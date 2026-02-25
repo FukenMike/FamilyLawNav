@@ -504,6 +504,17 @@ for (const f of screenFiles) {
   });
 }
 
+// TODO/FIXME report
+out += '\n## TODO/FIXME Report\n';
+const todoMatches = search(/TODO/);
+const fixmeMatches = search(/FIXME/);
+out += `- total TODO: ${todoMatches.length}\n`;
+out += `- total FIXME: ${fixmeMatches.length}\n`;
+const combined = [...todoMatches, ...fixmeMatches].slice(0,50);
+combined.forEach(r => {
+  out += `- ${path.relative(process.cwd(), r.file)}:${r.line} -> ${r.text}\n`;
+});
+
 // Reachability map
 const totalFiles = files.length;
 const reachableFiles = Array.from(reachable).sort();
