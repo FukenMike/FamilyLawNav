@@ -99,8 +99,8 @@
 - /home/michael/Desktop/FamilyLawNav/services/packStore.ts:315 -> const v = validateStatePack(payload.pack)
 - /home/michael/Desktop/FamilyLawNav/services/packStore.ts:393 -> const v = validateStatePack(pack)
 - /home/michael/Desktop/FamilyLawNav/services/packStore.ts:464 -> const v2 = validateStatePack(adapted)
-- /home/michael/Desktop/FamilyLawNav/tools/pack-builder/buildPack.js:226 -> function validatePack(p) {
-- /home/michael/Desktop/FamilyLawNav/tools/pack-builder/index.js:15 -> const validation = validatePack(pack);
+- /home/michael/Desktop/FamilyLawNav/tools/pack-builder/buildPack.js:235 -> function validatePack(p) {
+- /home/michael/Desktop/FamilyLawNav/tools/pack-builder/index.js:11 -> const validation = validatePack(pack);
 
 ### Seed pack fallback
 
@@ -142,14 +142,161 @@
 - public/packs exists
 - manifest.json exists
   - schemaVersion: 1
-  - pack entries: 2
-  - state GA: file exists
+  - pack entries: 51
+  - state AK: file exists
     - shape ok? true
-    - manifest packVersion: 2026-02-25T01:52:17.975Z
+    - manifest packVersion: 2026-02-25T03:48:50.850Z
   - state AL: file exists
     - shape ok? true
-    - manifest packVersion: 2026-02-25T01:52:17.994Z
-- pack file reconciliation: missing none, extra AK,AR,AZ,CA,CO,CT,DC,DE,FL,HI,IA,ID,IL,IN,KS,KY,LA,MA,MD,ME,MI,MN,MO,MS,MT,NC,ND,NE,NH,NJ,NM,NV,NY,OH,OK,OR,PA,RI,SC,SD,TN,TX,UT,VA,VT,WA,WI,WV,WY
+    - manifest packVersion: 2026-02-25T03:48:50.860Z
+  - state AR: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.865Z
+  - state AZ: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.866Z
+  - state CA: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.868Z
+  - state CO: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.871Z
+  - state CT: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.873Z
+  - state DE: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.876Z
+  - state FL: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.879Z
+  - state GA: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.881Z
+  - state HI: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.883Z
+  - state IA: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.886Z
+  - state ID: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.888Z
+  - state IL: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.891Z
+  - state IN: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.893Z
+  - state KS: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.895Z
+  - state KY: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.897Z
+  - state LA: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.899Z
+  - state MA: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.902Z
+  - state MD: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.905Z
+  - state ME: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.907Z
+  - state MI: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.909Z
+  - state MN: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.910Z
+  - state MO: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.911Z
+  - state MS: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.913Z
+  - state MT: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.914Z
+  - state NC: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.915Z
+  - state ND: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.916Z
+  - state NE: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.917Z
+  - state NH: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.919Z
+  - state NJ: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.920Z
+  - state NM: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.921Z
+  - state NV: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.923Z
+  - state NY: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.924Z
+  - state OH: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.925Z
+  - state OK: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.926Z
+  - state OR: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.927Z
+  - state PA: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.928Z
+  - state RI: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.929Z
+  - state SC: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.930Z
+  - state SD: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.931Z
+  - state TN: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.932Z
+  - state TX: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.933Z
+  - state UT: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.935Z
+  - state VA: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.937Z
+  - state VT: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.938Z
+  - state WA: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.939Z
+  - state WI: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.941Z
+  - state WV: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.943Z
+  - state WY: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.944Z
+  - state DC: file exists
+    - shape ok? true
+    - manifest packVersion: 2026-02-25T03:48:50.945Z
+- pack file reconciliation: missing none, extra none
 - could not load pack-builder config for source coverage
 
 ## Redundancy Counts
