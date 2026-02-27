@@ -1,3 +1,4 @@
+/* eslint-env node */
 const path = require('path');
 // no TypeScript loader or runtime dependency on data/statePacks.  sources/*
 // are the authoritative ingestion mechanism.
