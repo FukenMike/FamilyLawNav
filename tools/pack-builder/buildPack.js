@@ -55,12 +55,14 @@ function deriveAuthId(state, entry) {
 }
 
 function loadSource(state) {
-  const fname = path.join(__dirname, 'sources', state.toLowerCase() + '.js');
+  const fname = path.join(__dirname, '../../data/statePacks', state.toLowerCase() + '.ts');
   try {
+    // Use ts-node to require TypeScript files
+    require('ts-node').register();
     return require(fname);
   } catch (e) {
     if (e.code === 'MODULE_NOT_FOUND') {
-      console.log(`⚠️  source for ${state} not found (${fname}), skipping`);
+      console.log(`⚠️  baseline pack for ${state} not found (${fname}), skipping`);
       return null;
     }
     throw e;

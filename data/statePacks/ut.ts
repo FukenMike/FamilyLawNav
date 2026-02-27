@@ -1,7 +1,7 @@
 import type { StatePack } from "@/services/packStore";
 import { Domain, Issue, LegalTest, TestItem, ProceduralTrap } from "@/core/navigator/types";
 
-export const state = "CT";
+export const state = "UT";
 
 export const domains: Domain[] = [
   { id: "custody", label: "Custody" },
@@ -95,7 +95,7 @@ export const authorities: Record<string, {
 export const xxPack: StatePack = {
   state,
   schemaVersion: "1",
-  packVersion: 'seed-CT-2026-02-27',
+  packVersion: 'seed-UT-2026-02-27',
   jurisdictions_sources: {
     code: 'https://example.com/code',
     rules: '',

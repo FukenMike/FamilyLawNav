@@ -16,9 +16,9 @@ export const issues: Issue[] = [
 ];
 
 export const authoritiesByIssue: Record<string, string[]> = {
-  custody_initial: ["OCGA § 19-9-3", "Smith v. Smith, 300 Ga. 123 (2016)"],
-  custody_modification: ["OCGA § 19-9-3", "Jones v. Jones, 299 Ga. 456 (2016)"],
-  emergency_custody: ["OCGA § 19-9-1"],
+  custody_initial: ["Statute 1", "Case 1"],
+  custody_modification: ["Statute 1", "Case 2"],
+  emergency_custody: ["Statute 2"],
 };
 
 export const legalTests: LegalTest[] = [
@@ -57,7 +57,6 @@ export const traps: ProceduralTrap[] = [
   { id: "trap3", issueId: "emergency_custody", label: "Service Requirements", description: "All parties must be served.", severity: "high" },
 ];
 
-
 export const authorities: Record<string, {
   kind: "statute" | "case";
   title?: string;
@@ -65,40 +64,40 @@ export const authorities: Record<string, {
   courtScope?: string;
   sources?: string[];
 }> = {
-  "OCGA § 19-9-3": {
+  "Statute 1": {
     kind: "statute",
-    title: "Georgia Code Title 19, Section 9-3",
+    title: "Sample Statute 1",
     rank: "binding",
-    sources: ["https://law.justia.com/codes/georgia/2010/title-19/19-9/19-9-3/"]
+    sources: ["https://example.com/statute1"]
   },
-  "OCGA § 19-9-1": {
+  "Statute 2": {
     kind: "statute",
-    title: "Georgia Code Title 19, Section 9-1",
+    title: "Sample Statute 2",
     rank: "binding",
-    sources: ["https://law.justia.com/codes/georgia/2010/title-19/19-9/19-9-1/"]
+    sources: ["https://example.com/statute2"]
   },
-  "Smith v. Smith, 300 Ga. 123 (2016)": {
+  "Case 1": {
     kind: "case",
-    title: "Smith v. Smith, 300 Ga. 123 (2016)",
+    title: "Sample Case 1",
     rank: "binding",
-    courtScope: "Supreme Court of Georgia",
-    sources: ["https://casetext.com/case/smith-v-smith-1022"]
+    courtScope: "Supreme Court",
+    sources: ["https://example.com/case1"]
   },
-  "Jones v. Jones, 299 Ga. 456 (2016)": {
+  "Case 2": {
     kind: "case",
-    title: "Jones v. Jones, 299 Ga. 456 (2016)",
+    title: "Sample Case 2",
     rank: "binding",
-    courtScope: "Supreme Court of Georgia",
-    sources: ["https://casetext.com/case/jones-v-jones-102"]
+    courtScope: "Supreme Court",
+    sources: ["https://example.com/case2"]
   },
 };
 
-export const gaPack: StatePack = {
+export const xxPack: StatePack = {
   state,
   schemaVersion: "1",
-  packVersion: 'seed-ga-2026-02-20',
+  packVersion: 'seed-GA-2026-02-27',
   jurisdictions_sources: {
-    code: 'https://law.justia.com/codes/georgia/',
+    code: 'https://example.com/code',
     rules: '',
     opinions: '',
   },
@@ -110,4 +109,3 @@ export const gaPack: StatePack = {
   testItems,
   traps,
 };
-

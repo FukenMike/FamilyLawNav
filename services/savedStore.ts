@@ -3,6 +3,8 @@
 
 const STORAGE_KEY = 'savedAuthorities';
 
+export type SavedItem = { id: string; state: string };
+
 async function getStorage() {
   if (typeof window !== 'undefined' && window.localStorage) {
     return {
@@ -24,60 +26,77 @@ async function getStorage() {
   }
 }
 
-async function readAll(): Promise<string[]> {
+// Read raw storage and migrate old string[] format to SavedItem[] if needed
+async function readRaw(): Promise<any> {
   try {
     const storage: any = await getStorage();
     const raw = await storage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    return JSON.parse(raw) as string[];
+    if (!raw) return null;
+    return JSON.parse(raw);
   } catch (e) {
     console.warn('savedStore read failed', e);
-    return [];
+    return null;
   }
 }
 
-async function writeAll(ids: string[]): Promise<void> {
+async function readAll(): Promise<SavedItem[]> {
+  const raw = await readRaw();
+  if (!raw) return [];
+  if (Array.isArray(raw)) {
+    // migration: old storage might be string[]
+    if (raw.every(r => typeof r === 'string')) {
+      const migrated: SavedItem[] = (raw as string[]).map(id => ({ id, state: '' }));
+      await writeAll(migrated);
+      return migrated;
+    }
+    // assume already SavedItem[]
+    return raw as SavedItem[];
+  }
+  return [];
+}
+
+async function writeAll(items: SavedItem[]): Promise<void> {
   try {
     const storage: any = await getStorage();
-    await storage.setItem(STORAGE_KEY, JSON.stringify(ids));
+    await storage.setItem(STORAGE_KEY, JSON.stringify(items));
   } catch (e) {
     console.warn('savedStore write failed', e);
   }
 }
 
-export async function getSavedIds(): Promise<string[]> {
+export async function list(): Promise<SavedItem[]> {
   return await readAll();
 }
 
 export async function isSaved(id: string): Promise<boolean> {
   const arr = await readAll();
-  return arr.includes(id);
+  return arr.some(x => x.id === id);
 }
 
-export async function save(id: string): Promise<void> {
+export async function save(id: string, state: string): Promise<void> {
   const arr = await readAll();
-  if (!arr.includes(id)) {
-    arr.push(id);
+  if (!arr.some(x => x.id === id)) {
+    arr.push({ id, state });
     await writeAll(arr);
   }
 }
 
 export async function unsave(id: string): Promise<void> {
   let arr = await readAll();
-  if (arr.includes(id)) {
-    arr = arr.filter(x => x !== id);
+  if (arr.some(x => x.id === id)) {
+    arr = arr.filter(x => x.id !== id);
     await writeAll(arr);
   }
 }
 
 // toggles saved state, returns new state
-export async function toggle(id: string): Promise<boolean> {
+export async function toggle(id: string, state: string): Promise<boolean> {
   const current = await isSaved(id);
   if (current) {
     await unsave(id);
     return false;
   } else {
-    await save(id);
+    await save(id, state);
     return true;
   }
 }

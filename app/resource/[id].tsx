@@ -82,7 +82,7 @@ export default function ResourceRoute() {
         <TouchableOpacity
           style={[styles.saveBtn, saved ? styles.saveBtnActive : null]}
           onPress={async () => {
-            const newState = await toggleSaved(id);
+            const newState = await toggleSaved(id, stateCode);
             setSaved(newState);
           }}
         >

@@ -1,41 +1,48 @@
 import { useEffect, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
-import { getSavedIds } from '@/services/savedStore';
+import { list, SavedItem } from '@/services/savedStore';
 import { usePack } from '@/services/packStore';
 
 export default function SavedRoute() {
   const router = useRouter();
-  const [ids, setIds] = useState<string[]>([]);
+  const [items, setItems] = useState<SavedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [packState, setPackState] = useState<string>('');
   const { pack } = usePack(packState);
 
   useEffect(() => {
-    // load saved ids and optionally a pack to resolve titles
+    // load saved items; legacy string[] values will be migrated
     setLoading(true);
-    getSavedIds().then(arr => {
-      setIds(arr);
+    list().then(arr => {
+      setItems(arr);
       setLoading(false);
+      // if we don't have a packState yet, pick the first non-empty state
       if (arr.length > 0 && !packState) {
-        // try to load pack from first id's state if encoded
-        const maybeState = arr[0]?.split('%')[0];
-        if (maybeState) setPackState(maybeState);
+        const first = arr.find(i => i.state && i.state.length > 0);
+        if (first) setPackState(first.state);
       }
     });
   }, []);
 
-  const renderItem = ({ item }: { item: string }) => {
-    let label = item;
-    if (pack && pack.authorities && pack.authorities[item]?.title) {
-      label = pack.authorities[item].title;
+  const renderItem = ({ item }: { item: SavedItem }) => {
+    let label = item.id;
+    if (pack && pack.authorities && pack.authorities[item.id]?.title) {
+      label = pack.authorities[item.id].title;
     }
+    const disable = !item.state;
     return (
       <TouchableOpacity
         style={styles.item}
-        onPress={() => router.push(`/resource/${item}?state=${packState}`)}
+        onPress={() => {
+          if (disable) return;
+          router.push(`/resource/${item.id}?state=${item.state}`);
+        }}
+        disabled={disable}
       >
-        <Text style={styles.itemText}>{label}</Text>
+        <Text style={[styles.itemText, disable ? { color: '#999' } : null]}>
+          {label}{disable ? ' (Missing state)' : ''}
+        </Text>
       </TouchableOpacity>
     );
   };
@@ -44,10 +51,10 @@ export default function SavedRoute() {
     <View style={styles.container}>
       <Text style={styles.title}>Saved Authorities</Text>
       {loading && <ActivityIndicator size="small" />}
-      {!loading && ids.length === 0 && <Text style={styles.empty}>No saved items</Text>}
+      {!loading && items.length === 0 && <Text style={styles.empty}>No saved items</Text>}
       <FlatList
-        data={ids}
-        keyExtractor={i => i}
+        data={items}
+        keyExtractor={i => i.id + '|' + i.state}
         renderItem={renderItem}
         style={{ width: '100%' }}
       />
